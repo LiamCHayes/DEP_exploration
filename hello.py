@@ -1,3 +1,7 @@
+"""
+Getting familiar with DeepMind Control Suite
+"""
+
 from dm_control import suite
 import numpy as np
 import cv2
