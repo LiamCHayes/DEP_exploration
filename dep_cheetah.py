@@ -5,10 +5,6 @@ Pure DEP control of the cheetah
 from dm_control import suite
 import numpy as np
 
-class DEP_controller:
-    ## TODO ##
-    pass
-
 # Load environment
 env = suite.load(domain_name="cheetah", task_name="run")
 
