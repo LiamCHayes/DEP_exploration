@@ -34,7 +34,7 @@ while not time_step.last():
 # Visualize the episode
 height, width, layers = frames[0].shape
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
-video_name = 'output_test.avi'
+video_name = 'videos/output_test.avi'
 fps = 30
 
 out = cv2.VideoWriter(video_name, fourcc, fps, (width, height))
