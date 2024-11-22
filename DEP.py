@@ -6,6 +6,8 @@ Unbatched DEP agent implementation
 import torch
 from collections import deque
 
+from utils import print_and_pause
+
 # Classes and functions
 class DEP:
     """
@@ -14,8 +16,12 @@ class DEP:
     args:
         tau (int): Number of previous timesteps to update the controller with
         kappa (float): Normalization scaling factor
+        beta (float): Scale for the bias
+        sigma (float): Scale for the action
         delta_t (int): Number of timesteps to compute the change in state over
-        _device: Device to store computations in (CPU or GPU)
+        device: Device to store computations in (CPU or GPU)
+        action_size (int): size of y
+        observation_size (int): size of x
 
     attributes:
         tau (int): Number of previous timesteps to update the controller with
@@ -28,17 +34,22 @@ class DEP:
         x_smoothed (torch.Tensor in R): Moving average of the observations
         _timestep (int): Current timestep index
         _device: Device to store computations in (CPU or GPU)
+        _action_size (int): size of y
+        _observation_size (int): size of x
     """
-    def __init__(self, tau, kappa, delta_t, _device):
+    def __init__(self, tau, kappa, beta, sigma, delta_t, device, action_size, observation_size):
         # Scalars
         self.tau = tau
         self.kappa = kappa
+        self.beta = beta
+        self.sigma = sigma
         self.delta_t = delta_t
 
         # Matrices
         self.C = None
         self.C_normalized = None
-        self.M = None
+        self.M = -torch.eye(action_size, observation_size).to(device)
+        self.h = torch.zeros((action_size,)).to(device)
 
         # Memory
         self.memory = deque(maxlen = self.tau + self.delta_t)
@@ -46,21 +57,24 @@ class DEP:
 
         # Internal attributes
         self._timestep = 0
-        self._device = _device
+        self._device = device
+        self._action_size = action_size
+        self._observation_size = observation_size
 
-    def step(self, x):
+    def step(self, x, numpy=True):
         """
         Does a single DEP step
 
         args:
-            x: Current state
+            x (array of size self._observation_size): Current state
+            numpy (bool): Return a numpy array if true, else return a torch tensor stored on self._device
 
         returns:
             y: DEP action corresponding to x
         """
         # Convert x to a tensor if it isn't already
-        if isinstance(x, torch.Tensor):
-            x = torch.tensor(x, dtype=torch.float32)
+        if not isinstance(x, torch.Tensor):
+            x = torch.tensor(x, dtype=torch.float32).to(self._device)
 
         # Smooth the observation x
         if self.x_smoothed is None:
@@ -68,31 +82,50 @@ class DEP:
         else:
             self.x_smoothed = (x - self.x_smoothed) / 2
 
-        # Learning step
-        self._learn_controller()
+        # Learning step if there are enough memories in the buffer
+        if len(self.memory) > 2 + self.delta_t:
+            self._learn_controller()
         
         # Get action y
-        y = self._get_action()
+        if self.C == None:
+            y = torch.tanh(torch.rand(self._action_size)).to(self._device)
+        else:
+            y = self._get_action()
 
         # Add state action pair (x, y) to memory
-        self.memory.append((x, y))
+        self.memory.append((self.x_smoothed, y))
 
-        pass
+        # Update timestep and return action
+        self._timestep += 1
+        if numpy:
+            y = y.cpu().numpy()
+        return y
 
     def _learn_controller(self):
         """
         Updates the controller matrix based on the state x
         """
         # Compute the controller matrix C
+        self.C = torch.zeros((self._action_size, self._observation_size)).to(self._device)
 
-        # Normalize C 
+        update_set = range(1, min(self.tau, self.delta_t+1))
+        for s in update_set:
+            chi = self.memory[-s][0] - self.memory[-(s+1)][0]
+            nu = self.memory[-(s+self.delta_t)][0] - self.memory[-(s+self.delta_t+1)][0]
+            mu = torch.matmul(self.M, chi)
+            self.C += torch.einsum('j, k->jk', mu, nu)
+
+        # Normalize C
+        self.C_normalized = self.C
 
         # Compute bias h
-
-        pass
+        self.h = torch.tanh(self.memory[-1][1] * self.beta)/2 * self.h * 0.001
 
     def _get_action(self):
         """
         Forward pass for the one-layer DEP network (controller matrix with tanh activation)
         """
-        pass
+        q = torch.matmul(self.C_normalized, self.x_smoothed)
+        q = q / (torch.norm(q) + 1e-5)
+        y = torch.tanh(self.kappa * q + self.h) * self.sigma
+        return y

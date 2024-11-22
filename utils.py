@@ -20,3 +20,8 @@ def make_video(frames, video_name):
 
     out.release()
     cv2.destroyAllWindows()
+
+def print_and_pause(variable, message=""):
+    print(f"\n{message}")
+    print(variable)
+    input("\nPrinted and paused")
