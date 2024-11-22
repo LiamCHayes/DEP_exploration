@@ -7,9 +7,10 @@ import torch
 from dm_control import suite
 import torch
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 from DEP import DEP
-from utils import make_video, controller_evolution
+from utils import make_video, see_live
 from utils import print_and_pause
 
 # Load environment and DEP controller
@@ -25,7 +26,7 @@ action_size = env.action_spec().shape[0]
 observation_size = env.observation_spec()['position'].shape[0]
 dep_controller = DEP(tau, kappa, beta, sigma, delta_t, device, action_size, observation_size)
 
-# Initialize lists to track and visualize DEP
+# Initialize lists to track DEP
 frames = []
 weights = []
 
@@ -52,5 +53,5 @@ for t in tqdm(range(num_steps)):
         break
 
 # Visualize
-make_video(frames, "init_run")
-controller_evolution(weights)
+see_live(frames)
+see_live(weights)

@@ -22,13 +22,13 @@ def make_video(frames, video_name):
     out.release()
     cv2.destroyAllWindows()
 
-def controller_evolution(weights_list):
+def see_live(weights_list):
     fig, ax = plt.subplots()
     im = ax.imshow(weights_list[0], cmap='viridis', animated=True)
     for m in weights_list:
         im.set_array(m)
         plt.draw()
-        plt.pause(0.1)
+        plt.pause(0.02)
 
 
 def print_and_pause(variable, message=""):
