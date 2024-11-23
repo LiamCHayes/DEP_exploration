@@ -8,10 +8,10 @@ import matplotlib.pyplot as plt
 
 
 # Visualize the episode
-def make_video(frames, video_name):
+def make_video(frames, file_path):
     height, width, layers = frames[0].shape
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    video_name = f'videos/{video_name}.avi'
+    video_name = f'{file_path}.avi'
     fps = 30
 
     out = cv2.VideoWriter(video_name, fourcc, fps, (width, height))

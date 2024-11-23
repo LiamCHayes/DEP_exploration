@@ -8,10 +8,20 @@ from dm_control import suite
 import torch
 from tqdm import tqdm
 import pandas as pd
+import argparse
 
 from DEP import DEP
 from utils import make_video, see_live
 from utils import print_and_pause
+
+# Argparser
+def argparser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-n', '--name', help='Name of this run', required=True)
+    args = parser.parse_args()
+    return args
+
+args = argparser()
 
 # Load environment and dep controller
 env = suite.load(domain_name="cheetah", task_name="run")
@@ -99,9 +109,20 @@ for e in range(num_episodes):
 
     # Make a progress report video once in a while
     if reporting:
-        make_video(frames, f"progress_report_ep{e}")
+        make_video(frames, f"dep_backprop_results/{args.name}_ep{e}_progress_report")
+        torch.save(dep_controller.M, f'dep_backprop_results/{args.name}_ep{e}_model_matrix.pt')
 
+# Save episode rewards and losses
 data = list(episode_reward, episode_loss)
 cols = ['reward', 'loss']
 df = pd.DataFrame(data, cols)
-df.to_csv('metrics/dep_backprop.csv')    
+df.to_csv(f'dep_backprop_results/{args.name}_metrics.csv')  
+
+# Save DEP parameters
+data = [tau, kappa, beta, sigma, delta_t]
+cols = ['tau', 'kappa', 'beta', 'sigma', 'delat_t']
+df = pd.DataFrame(data, cols, index=False)
+df.to_csv(f'dep_backprop_results/{args.name}_dep_parameters.csv')
+
+# Save model matrix
+torch.save(dep_controller.M, f'dep_backprop_results/{args.name}_model_matrix.pt')
