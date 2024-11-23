@@ -22,10 +22,10 @@ def make_video(frames, video_name):
     out.release()
     cv2.destroyAllWindows()
 
-def see_live(weights_list):
+def see_live(frames):
     fig, ax = plt.subplots()
-    im = ax.imshow(weights_list[0], cmap='viridis', animated=True)
-    for m in weights_list:
+    im = ax.imshow(frames[0], cmap='viridis', animated=True)
+    for m in frames:
         im.set_array(m)
         plt.draw()
         plt.pause(0.02)
