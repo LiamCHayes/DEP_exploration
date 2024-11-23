@@ -104,4 +104,4 @@ for e in range(num_episodes):
 data = list(episode_reward, episode_loss)
 cols = ['reward', 'loss']
 df = pd.DataFrame(data, cols)
-df.to_csv('metrics/grid_rewards')    
+df.to_csv('metrics/dep_backprop.csv')    

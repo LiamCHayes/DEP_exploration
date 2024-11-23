@@ -69,4 +69,4 @@ for param_set in tqdm(grid):
 data = list(zip(*grid)).append(avg_reward)
 cols = ['tau', 'kappa', 'beta', 'sigma', 'delta_t', 'avg_reward']
 df = pd.DataFrame(data, cols)
-df.to_csv('metrics/grid_rewards')
+df.to_csv('metrics/grid_rewards.csv')
