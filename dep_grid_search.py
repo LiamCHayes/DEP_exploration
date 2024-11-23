@@ -31,8 +31,6 @@ delta_t = np.arange(1, 6, dtype=np.int32)
 
 grid = list(itertools.product(tau, kappa, beta, sigma, delta_t))
 
-print_and_pause(grid[627])
-
 # Initialize list to store reward data
 avg_reward = []
 
@@ -57,9 +55,6 @@ for param_set in tqdm(grid):
             observation = time_step.observation['position']
             action = dep_controller.step(observation)
             time_step = env.step(action)
-            
-            # Render and capture frame
-            frame = env.physics.render()
 
             # Measure reward
             tot_rew += time_step.reward

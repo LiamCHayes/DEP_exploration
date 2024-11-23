@@ -48,7 +48,7 @@ class DEP:
         # Matrices
         self.C = None
         self.C_normalized = None
-        self.M = -torch.eye(action_size, observation_size).to(device)
+        self.M = -torch.eye(action_size, observation_size, requires_grad=True).to(device)
         self.h = torch.zeros((action_size,)).to(device)
 
         # Memory
@@ -60,6 +60,15 @@ class DEP:
         self._device = device
         self._action_size = action_size
         self._observation_size = observation_size
+
+    def reset(self):
+        """
+        Resets the memory, controller matrices, and timestep while keeping the model matrix the same
+        """
+        self.C = None
+        self.C_normalized = None
+        self._timestep = 0
+        self.memory = deque(maxlen = self.tau + self.delta_t)
 
     def step(self, x, numpy=True):
         """
@@ -98,7 +107,7 @@ class DEP:
         # Update timestep and return action
         self._timestep += 1
         if numpy:
-            y = y.cpu().numpy()
+            y = y.cpu().detach().numpy()
         return y
 
     def _learn_controller(self):

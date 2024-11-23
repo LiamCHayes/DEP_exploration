@@ -1,0 +1,107 @@
+"""
+Use gradient descent to find the best M for maximizing the reward
+"""
+
+import numpy as np
+import torch
+from dm_control import suite
+import torch
+from tqdm import tqdm
+import pandas as pd
+
+from DEP import DEP
+from utils import make_video, see_live
+from utils import print_and_pause
+
+# Load environment and dep controller
+env = suite.load(domain_name="cheetah", task_name="run")
+
+# Load up DEP controller
+tau = 40
+kappa = 1000
+beta = 0.002
+sigma = 1
+delta_t = 4
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+action_size = env.action_spec().shape[0]
+observation_size = env.observation_spec()['position'].shape[0]
+
+dep_controller = DEP(tau, kappa, beta, sigma, delta_t, device, action_size, observation_size)
+
+# Optimizer things
+lr = 0.01
+dep_controller.M.retain_grad()
+
+# Training loop variables
+episode_reward = []
+episode_loss = []
+num_episodes = 150
+num_steps = 300
+progress_report_freq = 10
+
+# Training loop
+for e in range(num_episodes):
+    print("\nEpisode ", e)
+
+    # Reset episode things
+    time_step = env.reset()
+    dep_controller.reset()
+    total_reward = 0
+    total_loss = 0
+
+    # Determine if we are reporting or not
+    if e % progress_report_freq == 0:
+        reporting = True
+        frames = []
+    else:
+        reporting = False
+
+    # Run the episode
+    for t in tqdm(range(num_steps)):
+        # Get action and do it
+        observation = time_step.observation['position']
+        action = dep_controller.step(observation)
+        time_step = env.step(action)
+
+        # Render and capture frame if we are making a progress report
+        if reporting:
+            frame = env.physics.render()
+            frames.append(frame)
+
+        # Update model matrix if there has been a learning step
+        if dep_controller.C is not None:
+            # Compute loss 
+            prev_action = dep_controller.memory[-delta_t][1]
+            Mx = torch.matmul(dep_controller.M, torch.tensor(observation, dtype=torch.float32).to(device))
+            loss = torch.sum((Mx - prev_action)**2)
+
+            # Update step
+            loss.backward(retain_graph=True)
+            with torch.no_grad():
+                dep_controller.M -= lr * dep_controller.M.grad
+            dep_controller.M.grad.zero_()
+        else:
+            loss = 0
+
+        # Update reward and loss
+        total_reward += time_step.reward
+        total_loss += loss
+
+        # Break if episode is over
+        if time_step.last():
+            break
+
+    # Episode ended things
+    print('Total reward: ', total_reward)
+    print('Total loss: ', total_loss.item())
+    episode_reward.append(total_reward)
+    episode_loss.append(total_loss)
+
+    # Make a progress report video once in a while
+    if reporting:
+        make_video(frames, f"progress_report_ep{e}")
+
+data = list(episode_reward, episode_loss)
+cols = ['reward', 'loss']
+df = pd.DataFrame(data, cols)
+df.to_csv('metrics/grid_rewards')    
