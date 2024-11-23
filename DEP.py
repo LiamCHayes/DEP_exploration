@@ -108,7 +108,7 @@ class DEP:
         # Compute the controller matrix C
         self.C = torch.zeros((self._action_size, self._observation_size)).to(self._device)
 
-        update_set = range(1, min(self.tau, self.delta_t+1))
+        update_set = range(1, min(self.tau, self._timestep - self.delta_t))
         for s in update_set:
             chi = self.memory[-s][0] - self.memory[-(s+1)][0]
             nu = self.memory[-(s+self.delta_t)][0] - self.memory[-(s+self.delta_t+1)][0]

@@ -16,11 +16,11 @@ from utils import print_and_pause
 # Load environment and DEP controller
 env = suite.load(domain_name="cheetah", task_name="run")
 
-tau = 40
-kappa = 1000
-beta = 0.002
-sigma = 1
-delta_t = 1
+tau = 13
+kappa = 1
+beta = 0.1
+sigma = 0.5
+delta_t = 4
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 action_size = env.action_spec().shape[0]
 observation_size = env.observation_spec()['position'].shape[0]

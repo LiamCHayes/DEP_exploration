@@ -7,8 +7,8 @@ import torch
 from dm_control import suite
 import torch
 from tqdm import tqdm
-import matplotlib.pyplot as plt
 import itertools
+import pandas as pd
 
 from DEP import DEP
 from utils import make_video, see_live
@@ -27,21 +27,25 @@ tau = np.linspace(1, 50, 5, dtype=np.int32)
 kappa = [1, 10, 100, 1000, 10000]
 beta = np.linspace(0, 0.01, 5)
 sigma = np.linspace(0.5, 10, 5)
-delta_t = np.arange(1, 6)
+delta_t = np.arange(1, 6, dtype=np.int32)
 
 grid = list(itertools.product(tau, kappa, beta, sigma, delta_t))
 
+print_and_pause(grid[627])
+
 # Initialize list to store reward data
-total_reward = []
+avg_reward = []
 
 # Do grid search
 for param_set in tqdm(grid):
     # DEP controller
     tau, kappa, beta, sigma, delta_t = param_set
+    tau = int(tau)
+    delta_t = int(delta_t)
     dep_controller = DEP(tau, kappa, beta, sigma, delta_t, device, action_size, observation_size)
 
     # Loop things
-    num_steps = 200
+    num_steps = 300
     num_samples = 5
 
     # Run simulation num_samples times per parameter combination
@@ -64,4 +68,10 @@ for param_set in tqdm(grid):
             if time_step.last():
                 break
 
-    total_reward.append(tot_rew)
+    avg_reward.append(tot_rew / num_samples)
+
+# Make dataframe and save it
+data = list(zip(*grid)).append(avg_reward)
+cols = ['tau', 'kappa', 'beta', 'sigma', 'delta_t', 'avg_reward']
+df = pd.DataFrame(data, cols)
+df.to_csv('metrics/grid_rewards')
