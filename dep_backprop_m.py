@@ -2,7 +2,7 @@
 Use gradient descent to find the best M for maximizing the reward
 """
 
-import os
+import numpy as np
 from dm_control import suite
 import torch
 from tqdm import tqdm
@@ -21,7 +21,6 @@ def argparser():
     return args
 
 args = argparser()
-os.mkdir(f'/dep_backprop_results/{args.name}')
 
 # Load environment and dep controller
 env = suite.load(domain_name="cheetah", task_name="run")
