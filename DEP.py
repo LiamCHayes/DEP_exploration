@@ -61,15 +61,6 @@ class DEP:
         self._action_size = action_size
         self._observation_size = observation_size
 
-    def reset(self):
-        """
-        Resets the memory, controller matrices, and timestep while keeping the model matrix the same
-        """
-        self.C = None
-        self.C_normalized = None
-        self._timestep = 0
-        self.memory = deque(maxlen = self.tau + self.delta_t)
-
     def step(self, x, numpy=True):
         """
         Does a single DEP step
@@ -109,6 +100,24 @@ class DEP:
         if numpy:
             y = y.cpu().detach().numpy()
         return y
+
+    def set_model(self, model):
+        """
+        Initialize the model matrix from something that's not an identity
+        
+        args:
+            model (torch tensor): Matrix of the shape (self._action_size, self._observation_size)
+        """
+        self.M = model
+
+    def reset(self):
+        """
+        Resets the memory, controller matrices, and timestep while keeping the model matrix the same
+        """
+        self.C = None
+        self.C_normalized = None
+        self._timestep = 0
+        self.memory = deque(maxlen = self.tau + self.delta_t)
 
     def _learn_controller(self):
         """

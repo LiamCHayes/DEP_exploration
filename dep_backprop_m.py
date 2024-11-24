@@ -2,8 +2,6 @@
 Use gradient descent to find the best M for maximizing the reward
 """
 
-import numpy as np
-import torch
 from dm_control import suite
 import torch
 from tqdm import tqdm
@@ -45,7 +43,7 @@ dep_controller.M.retain_grad()
 # Training loop variables
 episode_reward = []
 episode_loss = []
-num_episodes = 150
+num_episodes = 100
 num_steps = 300
 progress_report_freq = 10
 
