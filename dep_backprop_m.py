@@ -2,6 +2,7 @@
 Use gradient descent to find the best M for maximizing the reward
 """
 
+import os
 from dm_control import suite
 import torch
 from tqdm import tqdm
@@ -20,6 +21,7 @@ def argparser():
     return args
 
 args = argparser()
+os.mkdir(f'/dep_backprop_results/{args.name}')
 
 # Load environment and dep controller
 env = suite.load(domain_name="cheetah", task_name="run")
@@ -43,9 +45,9 @@ dep_controller.M.retain_grad()
 # Training loop variables
 episode_reward = []
 episode_loss = []
-num_episodes = 100
+num_episodes = 1001
 num_steps = 300
-progress_report_freq = 10
+progress_report_freq = 100
 
 # Training loop
 for e in range(num_episodes):
@@ -112,20 +114,20 @@ for e in range(num_episodes):
 
     # Make a progress report video once in a while
     if reporting:
-        make_video(frames, f"dep_backprop_results/{args.name}_ep{e}_progress_report")
-        torch.save(dep_controller.M, f'dep_backprop_results/{args.name}_ep{e}_model_matrix.pt')
+        make_video(frames, f"dep_backprop_results/{args.name}/ep{e}_progress_report")
+        torch.save(dep_controller.M, f'dep_backprop_results/{args.name}/ep{e}_model_matrix.pt')
 
 # Save episode rewards and losses
 data = list(episode_reward, episode_loss)
 cols = ['reward', 'loss']
 df = pd.DataFrame(data, cols)
-df.to_csv(f'dep_backprop_results/{args.name}_metrics.csv')  
+df.to_csv(f'dep_backprop_results/{args.name}/metrics.csv')  
 
 # Save DEP parameters
 data = [tau, kappa, beta, sigma, delta_t]
 cols = ['tau', 'kappa', 'beta', 'sigma', 'delat_t']
 df = pd.DataFrame(data, cols, index=False)
-df.to_csv(f'dep_backprop_results/{args.name}_dep_parameters.csv')
+df.to_csv(f'dep_backprop_results/{args.name}/dep_parameters.csv')
 
 # Save model matrix
-torch.save(dep_controller.M, f'dep_backprop_results/{args.name}_model_matrix.pt')
+torch.save(dep_controller.M, f'dep_backprop_results/{args.name}/model_matrix.pt')

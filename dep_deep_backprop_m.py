@@ -119,13 +119,15 @@ for e in range(num_episodes):
 # Save episode rewards and losses
 data = [episode_reward, episode_loss]
 cols = ['reward', 'loss']
-df = pd.DataFrame(data, cols)
+df = pd.DataFrame(data)
+df.transpose()
+df.columns = cols
 df.to_csv(f'dep_deep_backprop_results/{args.name}_metrics.csv')  
 
 # Save DEP parameters
 data = [tau, kappa, beta, sigma, delta_t]
 cols = ['tau', 'kappa', 'beta', 'sigma', 'delat_t']
-df = pd.DataFrame(data, cols, index=False)
+df = pd.DataFrame(data, columns=cols, index=False)
 df.to_csv(f'dep_deep_backprop_results/{args.name}_dep_parameters.csv')
 
 # Save model matrix
