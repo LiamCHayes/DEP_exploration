@@ -16,6 +16,7 @@ from utils import print_and_pause
 def argparser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-n', '--name', help='Name of this run', required=True)
+    parser.add_argument('-e', '--episodes', help='Number of episodes to train for', required=True)
     args = parser.parse_args()
     return args
 
@@ -43,7 +44,7 @@ optimizer = torch.optim.Adam(dep_controller.M.parameters(), lr=lr)
 # Training loop variables
 episode_reward = []
 episode_loss = []
-num_episodes = 100
+num_episodes = int(args.episodes)
 num_steps = 300
 progress_report_freq = 10
 
@@ -113,8 +114,8 @@ for e in range(num_episodes):
 
     # Make a progress report video once in a while
     if reporting:
-        make_video(frames, f"dep_deep_backprop_results/{args.name}_ep{e}_progress_report")
-        torch.save(dep_controller.M, f'dep_deep_backprop_results/{args.name}_ep{e}_model_matrix.pt')
+        make_video(frames, f"dep_deep_backprop_results/{args.name}/ep{e}_progress_report")
+        torch.save(dep_controller.M, f'dep_deep_backprop_results/{args.name}/ep{e}_model_matrix.pt')
 
 # Save episode rewards and losses
 data = [episode_reward, episode_loss]
@@ -122,13 +123,13 @@ cols = ['reward', 'loss']
 df = pd.DataFrame(data)
 df.transpose()
 df.columns = cols
-df.to_csv(f'dep_deep_backprop_results/{args.name}_metrics.csv')  
+df.to_csv(f'dep_deep_backprop_results/{args.name}/metrics.csv')  
 
 # Save DEP parameters
 data = [tau, kappa, beta, sigma, delta_t]
 cols = ['tau', 'kappa', 'beta', 'sigma', 'delat_t']
 df = pd.DataFrame(data, columns=cols, index=False)
-df.to_csv(f'dep_deep_backprop_results/{args.name}_dep_parameters.csv')
+df.to_csv(f'dep_deep_backprop_results/{args.name}/dep_parameters.csv')
 
 # Save model matrix
-torch.save(dep_controller.M, f'dep_deep_backprop_results/{args.name}_model_matrix.pt')
+torch.save(dep_controller.M, f'dep_deep_backprop_results/{args.name}/model_matrix.pt')
