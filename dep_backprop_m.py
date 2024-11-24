@@ -118,15 +118,17 @@ for e in range(num_episodes):
         torch.save(dep_controller.M, f'dep_backprop_results/{args.name}/ep{e}_model_matrix.pt')
 
 # Save episode rewards and losses
-data = list(episode_reward, episode_loss)
-cols = ['reward', 'loss']
-df = pd.DataFrame(data, cols)
+data = np.array([episode_reward, episode_loss])
+cols=['reward', 'loss']
+df = pd.DataFrame(data).transpose()
+df.columns = cols
 df.to_csv(f'dep_backprop_results/{args.name}/metrics.csv')  
 
 # Save DEP parameters
 data = [tau, kappa, beta, sigma, delta_t]
 cols = ['tau', 'kappa', 'beta', 'sigma', 'delat_t']
-df = pd.DataFrame(data, cols, index=False)
+df = pd.DataFrame(data).transpose()
+df.columns = cols
 df.to_csv(f'dep_backprop_results/{args.name}/dep_parameters.csv')
 
 # Save model matrix
