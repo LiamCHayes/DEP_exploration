@@ -8,7 +8,8 @@ from collections import deque
 
 from utils import print_and_pause
 
-# Classes and functions
+
+# Classic DEP implementation
 class DEP:
     """
     Implements an unbatched DEP controller in pytorch
@@ -147,3 +148,48 @@ class DEP:
         q = q / (torch.norm(q) + 1e-5)
         y = torch.tanh(self.kappa * q + self.h) * self.sigma
         return y
+
+
+# DEP implementation with a deep inverse prediction model
+class DEPDeepModel(DEP):
+    """
+    Same as DEP but with a multi-layer model network
+    """
+    def __init__(self, tau, kappa, beta, sigma, delta_t, device, action_size, observation_size):
+        super(DEPDeepModel, self).__init__(tau, kappa, beta, sigma, delta_t, device, action_size, observation_size)
+        super().set_model(MNetwork(observation_size, action_size, device))
+
+    def _learn_controller(self):
+        """
+        Updates the controller matrix based on the state x
+        """
+        # Compute the controller matrix C
+        self.C = torch.zeros((self._action_size, self._observation_size)).to(self._device)
+
+        update_set = range(1, min(self.tau, self._timestep - self.delta_t))
+        for s in update_set:
+            chi = self.memory[-s][0] - self.memory[-(s+1)][0]
+            nu = self.memory[-(s+self.delta_t)][0] - self.memory[-(s+self.delta_t+1)][0]
+            mu = self.M(chi)
+            self.C += torch.einsum('j, k->jk', mu, nu)
+
+        # Normalize C
+        self.C_normalized = self.C
+
+        # Compute bias h
+        self.h = torch.tanh(self.memory[-1][1] * self.beta)/2 * self.h * 0.001
+
+class MNetwork(torch.nn.Module):
+    def __init__(self, input_size, output_size, device):
+        super(MNetwork, self).__init__()
+        self.ntw = torch.nn.Sequential(
+            torch.nn.Linear(input_size, output_size),
+            torch.nn.ReLU(),
+            torch.nn.Linear(output_size, output_size),
+            torch.nn.ReLU(),
+            torch.nn.Linear(output_size, output_size)
+        ).to(device)
+
+    def forward(self, x):
+        return self.ntw(x)
+
