@@ -170,7 +170,8 @@ class DEPDeepModel(DEP):
         for s in update_set:
             chi = self.memory[-s][0] - self.memory[-(s+1)][0]
             nu = self.memory[-(s+self.delta_t)][0] - self.memory[-(s+self.delta_t+1)][0]
-            mu = self.M(chi)
+            with torch.no_grad():
+                mu = self.M(chi)
             self.C += torch.einsum('j, k->jk', mu, nu)
 
         # Normalize C
@@ -182,14 +183,17 @@ class DEPDeepModel(DEP):
 class MNetwork(torch.nn.Module):
     def __init__(self, input_size, output_size, device):
         super(MNetwork, self).__init__()
-        self.ntw = torch.nn.Sequential(
-            torch.nn.Linear(input_size, output_size),
-            torch.nn.ReLU(),
-            torch.nn.Linear(output_size, output_size),
-            torch.nn.ReLU(),
-            torch.nn.Linear(output_size, output_size)
-        ).to(device)
+        self.L1 = torch.nn.Linear(input_size, output_size).to(device)
+        self.L2 = torch.nn.Linear(output_size, output_size).to(device)
+        self.L3 = torch.nn.Linear(output_size, output_size).to(device)
+        self.activation = torch.nn.ReLU().to(device)
 
     def forward(self, x):
-        return self.ntw(x)
+        x = self.L1(x)
+        x = self.activation(x)
+        x = self.L2(x)
+        x = self.activation(x)
+        x = self.L3(x)
+
+        return x
 

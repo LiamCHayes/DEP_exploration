@@ -19,7 +19,7 @@ def argparser():
     args = parser.parse_args()
     return args
 
-args = argparser()
+#args = argparser()
 
 # Load environment and dep controller
 env = suite.load(domain_name="cheetah", task_name="run")
@@ -29,7 +29,7 @@ tau = 40
 kappa = 1000
 beta = 0.002
 sigma = 1
-delta_t = 4
+delta_t = 5
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 action_size = env.action_spec().shape[0]
 observation_size = env.observation_spec()['position'].shape[0]
@@ -83,18 +83,17 @@ for e in range(num_episodes):
 
         # Update model matrix if there has been a learning step
         if dep_controller.C is not None:
-            with torch.autograd.set_detect_anomaly(True):
-                # Zero grad
-                optimizer.zero_grad()
+            # Zero grad
+            optimizer.zero_grad()
 
-                # Compute loss 
-                prev_action = dep_controller.memory[-delta_t][1]
-                Mx = dep_controller.M(torch.tensor(observation, dtype=torch.float32).to(device))
-                loss = torch.sum((Mx - prev_action)**2)
+            # Compute loss 
+            prev_action = dep_controller.memory[-delta_t][1]
+            Mx = dep_controller.M(torch.tensor(observation, dtype=torch.float32).to(device))
+            loss = torch.sum((Mx - prev_action)**2)
 
-                # Update network
-                loss.backward()
-                optimizer.step()
+            # Update network
+            loss.backward()
+            optimizer.step()
         else:
             loss = 0
 
