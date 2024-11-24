@@ -19,7 +19,7 @@ def argparser():
     args = parser.parse_args()
     return args
 
-#args = argparser()
+args = argparser()
 
 # Load environment and dep controller
 env = suite.load(domain_name="cheetah", task_name="run")
