@@ -117,7 +117,7 @@ for e in range(num_episodes):
         torch.save(dep_controller.M, f'dep_deep_backprop_results/{args.name}_ep{e}_model_matrix.pt')
 
 # Save episode rewards and losses
-data = list(episode_reward, episode_loss)
+data = [episode_reward, episode_loss]
 cols = ['reward', 'loss']
 df = pd.DataFrame(data, cols)
 df.to_csv(f'dep_deep_backprop_results/{args.name}_metrics.csv')  
