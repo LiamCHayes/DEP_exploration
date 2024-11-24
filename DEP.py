@@ -157,7 +157,7 @@ class DEPDeepModel(DEP):
     """
     def __init__(self, tau, kappa, beta, sigma, delta_t, device, action_size, observation_size):
         super(DEPDeepModel, self).__init__(tau, kappa, beta, sigma, delta_t, device, action_size, observation_size)
-        super().set_model(MNetwork(observation_size, action_size, device))
+        self.set_model(MNetwork(observation_size, action_size, device))
 
     def _learn_controller(self):
         """
