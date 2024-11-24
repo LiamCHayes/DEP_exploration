@@ -68,6 +68,6 @@ for param_set in tqdm(grid):
 # Make dataframe and save it
 data = np.array(list(zip(*grid))).T
 data = np.hstack((data, np.array(avg_reward)[np.newaxis, :].T))
-cols = ['tau', 'kappa', 'beta', 'sigma', 'delta_t']
+cols = ['tau', 'kappa', 'beta', 'sigma', 'delta_t', 'avg_reward']
 df = pd.DataFrame(data, columns=cols)
 df.to_csv('metrics/grid_rewards.csv')
