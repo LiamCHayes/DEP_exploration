@@ -73,7 +73,12 @@ for e in range(num_episodes):
 
         # Render and capture frame if we are making a progress report
         if reporting:
-            frame = env.physics.render()
+            # Adjust camera
+            agent_pos = env.physics.named.data.xpos['torso']
+            env.physics.named.data.cam_xpos['side'][0] = agent_pos[0]
+
+            # Render and save frame
+            frame = env.physics.render(camera_id = 'side')
             frames.append(frame)
 
         # Update model matrix if there has been a learning step
