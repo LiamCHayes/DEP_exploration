@@ -46,8 +46,8 @@ optimizer = torch.optim.Adam(dep_controller.M.parameters(), lr=lr)
 episode_reward = []
 episode_loss = []
 num_episodes = int(args.episodes)
-num_steps = 300
-progress_report_freq = 10
+num_steps = 500
+progress_report_freq = 500
 
 # Training loop
 for e in range(num_episodes):
