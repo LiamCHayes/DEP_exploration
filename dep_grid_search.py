@@ -66,7 +66,8 @@ for param_set in tqdm(grid):
     avg_reward.append(tot_rew / num_samples)
 
 # Make dataframe and save it
-data = list(zip(*grid)).append(avg_reward)
-cols = ['tau', 'kappa', 'beta', 'sigma', 'delta_t', 'avg_reward']
-df = pd.DataFrame(data, cols)
+data = np.array(list(zip(*grid))).T
+data = np.hstack((data, np.array(avg_reward)[np.newaxis, :].T))
+cols = ['tau', 'kappa', 'beta', 'sigma', 'delta_t']
+df = pd.DataFrame(data, columns=cols)
 df.to_csv('metrics/grid_rewards.csv')
