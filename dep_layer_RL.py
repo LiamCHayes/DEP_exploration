@@ -108,7 +108,7 @@ for e in range(num_episodes):
         reporting = False
 
     # Run the episode
-    for t in tqdm(range(num_steps)):
+    for t in range(num_steps):
         # Get action and do it
         observation = time_step.observation['position']
         observation_tensor = torch.tensor(observation, dtype=torch.float32).unsqueeze(0).to(device)
