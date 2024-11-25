@@ -26,11 +26,11 @@ args = argparser()
 env = suite.load(domain_name="cheetah", task_name="run")
 
 # Load up DEP controller
-tau = 40
+tau = 13
 kappa = 1000
-beta = 0.002
-sigma = 1
-delta_t = 4
+beta = 0.0025
+sigma = 5.25
+delta_t = 1
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 action_size = env.action_spec().shape[0]
 observation_size = env.observation_spec()['position'].shape[0]
@@ -44,9 +44,9 @@ dep_controller.M.retain_grad()
 # Training loop variables
 episode_reward = []
 episode_loss = []
-num_episodes = 10001
+num_episodes = 2000
 num_steps = 300
-progress_report_freq = 500
+progress_report_freq = 100
 
 # Training loop
 for e in range(num_episodes):
