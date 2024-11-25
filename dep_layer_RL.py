@@ -159,8 +159,8 @@ for e in range(num_episodes):
             actor_target.load_state_dict(actor.state_dict(), actor.DEPlayer.M.state_dict())
 
         # Update stats
-        total_actor_loss += actor_loss
-        total_critic_loss += critic_loss
+        total_actor_loss += actor_loss.item()
+        total_critic_loss += critic_loss.item()
         total_reward += time_step.reward
 
     # Print episode stats

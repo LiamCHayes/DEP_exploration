@@ -27,11 +27,11 @@ high_reward[seq(10),] %>% filter(tau == 13)
 
 
 # Deep model matrix analysis, ten thousand episode run
-df <- read.csv('dep_deep_backprop_results/ten_thousand/metrics.csv')
+df <- read.csv('dep_deep_backprop_results/best_params/metrics.csv')
 
 # Only take rewards bigger than 50
 df_high_reward <- df %>%
-    filter(reward > 50)
+    filter(reward > 20)
 
 ggplot(data=df) +
     geom_point(aes(x=X, y=reward)) 
