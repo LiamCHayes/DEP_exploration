@@ -153,7 +153,7 @@ for e in range(num_episodes):
         # Update targets every once in a while
         if e % update_freq == 0:
             critic_target.load_state_dict(critic.state_dict())
-            actor_target.load_state_dict(actor.state_dict())
+            actor_target.load_state_dict(actor.state_dict(), actor.DEPlayer.M.state_dict())
 
         # Update stats
         total_actor_loss += actor_loss
