@@ -164,7 +164,6 @@ for e in range(num_episodes):
         total_reward += time_step.reward
 
     # Print episode stats
-    print("Episode: ", e)
     print("Reward: ", total_reward)
     print("Actor Loss: ", total_actor_loss)
     print("Critic Loss: ", total_critic_loss)
