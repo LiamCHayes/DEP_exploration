@@ -27,11 +27,11 @@ args = argparser()
 env = suite.load(domain_name="cheetah", task_name="run")
 
 # Load up DEP controller
-tau = 40
+tau = 13
 kappa = 1000
-beta = 0.002
-sigma = 1
-delta_t = 5
+beta = 0.0025
+sigma = 5.25
+delta_t = 1
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 action_size = env.action_spec().shape[0]
 observation_size = env.observation_spec()['position'].shape[0]
