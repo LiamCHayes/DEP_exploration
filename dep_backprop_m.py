@@ -44,9 +44,9 @@ dep_controller.M.retain_grad()
 # Training loop variables
 episode_reward = []
 episode_loss = []
-num_episodes = 1001
+num_episodes = 10001
 num_steps = 300
-progress_report_freq = 100
+progress_report_freq = 500
 
 # Training loop
 for e in range(num_episodes):
