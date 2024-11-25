@@ -1,7 +1,8 @@
 library(dplyr)
 library(ggplot2)
 
-# Load data
+
+# Grid search analysis
 df <- read.csv('metrics/grid_rewards.csv')
 
 # Plots
@@ -23,3 +24,19 @@ high_reward[seq(10),] %>% filter(tau == 13)
 # beta = 0.0025
 # sigma = 5.25
 # delta_t <= 2
+
+
+# Deep model matrix analysis, ten thousand episode run
+df <- read.csv('dep_deep_backprop_results/ten_thousand/metrics.csv')
+
+# Only take rewards bigger than 50
+df_high_reward <- df %>%
+    filter(reward > 50)
+
+ggplot(data=df) +
+    geom_point(aes(x=X, y=reward)) 
+
+ggplot(data=df_high_reward) +
+    geom_point(aes(x=X, y=reward))
+
+plot(df_high_reward$X)

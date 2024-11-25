@@ -132,7 +132,7 @@ class DEP:
             chi = self.memory[-s][0] - self.memory[-(s+1)][0]
             nu = self.memory[-(s+self.delta_t)][0] - self.memory[-(s+self.delta_t+1)][0]
             mu = torch.matmul(self.M, chi)
-            self.C += torch.einsum('j, k->jk', mu, nu)
+            self.C = + self.C + torch.einsum('j, k->jk', mu, nu)
 
         # Normalize C
         self.C_normalized = self.C
@@ -144,11 +144,10 @@ class DEP:
         """
         Forward pass for the one-layer DEP network (controller matrix with tanh activation)
         """
-        q = torch.matmul(self.C_normalized, self.x_smoothed)
+        q = torch.einsum('ijk, ik -> ij', self.C_normalized, self.x_smoothed)
         q = q / (torch.norm(q) + 1e-5)
         y = torch.tanh(self.kappa * q + self.h) * self.sigma
         return y
-
 
 # DEP implementation with a deep inverse prediction model
 class DEPDeepModel(DEP):
@@ -172,7 +171,7 @@ class DEPDeepModel(DEP):
             nu = self.memory[-(s+self.delta_t)][0] - self.memory[-(s+self.delta_t+1)][0]
             with torch.no_grad():
                 mu = self.M(chi)
-            self.C += torch.einsum('j, k->jk', mu, nu)
+            self.C = self.C + torch.einsum('j, k->jk', mu, nu)
 
         # Normalize C
         self.C_normalized = self.C
@@ -197,3 +196,72 @@ class MNetwork(torch.nn.Module):
 
         return x
 
+# DEP with deep prediction model that can handle batches
+class BatchedDEP(DEPDeepModel):
+    """
+    Implements a batched version of DEP for use in a Neural Network
+    """
+    def __init__(self, tau, kappa, beta, sigma, delta_t, device, action_size, observation_size):
+        super(BatchedDEP, self).__init__(tau, kappa, beta, sigma, delta_t, device, action_size, observation_size)
+        self._batch_size = None
+
+    def step(self, x):
+        """
+        Does a single DEP step
+
+        args:
+            x (array of size (batch_size, self._observation_size)): Current state
+
+        returns:
+            y (tensor of size (batch_size, self._action_size)): DEP action corresponding to x
+        """
+        # Convert x to a tensor if it isn't already
+        if not isinstance(x, torch.Tensor):
+            x = torch.tensor(x, dtype=torch.float32).to(self._device)
+
+        # Set batch size
+        self._batch_size = x.shape[0]
+
+        # Smooth the observation x
+        if self.x_smoothed is None:
+            self.x_smoothed = x
+        else:
+            self.x_smoothed = (x - self.x_smoothed) / 2
+
+        # Learning step if there are enough memories in the buffer
+        if len(self.memory) > 2 + self.delta_t:
+            self._learn_controller()
+        
+        # Get action y
+        if self.C == None:
+            y = torch.tanh(torch.rand((self._batch_size, self._action_size))).to(self._device)
+        else:
+            y = self._get_action()
+
+        # Add state action pair (x, y) to memory
+        self.memory.append((self.x_smoothed, y))
+
+        # Update timestep and return action
+        self._timestep += 1
+        return y
+    
+    def _learn_controller(self):
+        """
+        Updates the controller matrix based on the state x
+        """
+        # Compute the controller matrix C
+        self.C = torch.zeros((self._batch_size, self._action_size, self._observation_size)).to(self._device)
+
+        update_set = range(1, min(self.tau, self._timestep - self.delta_t))
+        for s in update_set:
+            chi = self.memory[-s][0] - self.memory[-(s+1)][0]
+            nu = self.memory[-(s+self.delta_t)][0] - self.memory[-(s+self.delta_t+1)][0]
+            with torch.no_grad():
+                mu = self.M(chi)
+            self.C = self.C + torch.einsum('ij, ik->ijk', mu, nu)
+
+        # Normalize C
+        self.C_normalized = self.C
+
+        # Compute bias h
+        self.h = torch.tanh(self.memory[-1][1] * self.beta)/2 * self.h * 0.001
