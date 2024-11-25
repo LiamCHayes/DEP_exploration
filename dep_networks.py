@@ -43,10 +43,31 @@ class FirstLayerDEP(nn.Module):
         y = self.activation(y)
         y = self.L5(y)
         y = self.activation(y)
+        return y, dep_output
+
+    def forward_no_step(self, x, dep_output):
+        """
+        Does a forward pass on the network without stepping DEP layer
+        Used for network updates when sampling from replay buffer
+        """
+        dep_output = torch.squeeze(dep_output, dim=1)
+        ntw_in = torch.concat((x, dep_output), dim=1)
+        y = self.L1(ntw_in)
+        y = self.activation(y)
+        y = self.L2(y)
+        y = self.activation(y)
+        y = self.L3(y)
+        y = self.activation(y)
+        y = self.L4(y)
+        y = self.activation(y)
+        y = self.L5(y)
+        y = self.activation(y)
         return y
 
     def only_dep(self, x):
-        # Returns only the DEP forward pass without the NN 
+        """
+        Returns only the DEP forward pass without the NN 
+        """
         return self.DEPlayer.step(x)
 
     def reset_dep(self):

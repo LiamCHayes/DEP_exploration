@@ -41,22 +41,23 @@ class ReplayBuffer:
     def __init__(self, maxlen):
         self.memory = deque(maxlen=maxlen)
 
-    def add(self, state, action, reward, next_state, done):
-        self.memory.append((state, action, reward, next_state, done))
+    def add(self, state, action, dep_output, reward, next_state, done):
+        self.memory.append((state, action, dep_output, reward, next_state, done))
 
     def sample(self, batch_size):
         # Sample
         batch = random.sample(self.memory, batch_size)
-        states, actions, rewards, next_states, dones = zip(*batch)
+        states, actions, dep_outputs, rewards, next_states, dones = zip(*batch)
         
         # Convert to tensors
         states = [torch.tensor(s, dtype=torch.float32).to(device) for s in states]
         actions = [torch.tensor(a, dtype=torch.float32).to(device) for a in actions]
+        dep_outputs = [torch.tensor(d, dtype=torch.float32).to(device) for d in dep_outputs]
         rewards = [torch.tensor(r, dtype=torch.float32).to(device) for r in rewards]
         next_states = [torch.tensor(n, dtype=torch.float32).to(device) for n in next_states]
         dones = [torch.tensor(d, dtype=torch.int32).to(device) for d in dones]
 
-        return torch.stack(states), torch.stack(actions), torch.stack(rewards), torch.stack(next_states), torch.stack(dones)
+        return torch.stack(states), torch.stack(actions), torch.stack(dep_outputs), torch.stack(rewards), torch.stack(next_states), torch.stack(dones)
     
     def len(self):
         return len(self.memory)
@@ -86,7 +87,7 @@ while memory.len() < batch_size:
         time_step = env.step(action)
 
         # Store experience in memory
-        memory.add(observation, action, time_step.reward, time_step.observation['position'], time_step.last())
+        memory.add(observation, action, action, time_step.reward, time_step.observation['position'], time_step.last())
 
 # Training loop
 for e in range(num_episodes):
@@ -111,7 +112,9 @@ for e in range(num_episodes):
         # Get action and do it
         observation = time_step.observation['position']
         observation_tensor = torch.tensor(observation, dtype=torch.float32).unsqueeze(0).to(device)
-        action = actor(observation_tensor).cpu().detach().numpy()
+        action, dep_output = actor(observation_tensor)
+        action = action.cpu().detach().numpy()
+        dep_output = dep_output.cpu().detach().numpy()
         time_step = env.step(action)
 
         # Render and capture frame if we are making a progress report
@@ -128,12 +131,12 @@ for e in range(num_episodes):
         dep_model_loss = actor.learn_dep_model(observation)
 
         # Store experience in memory
-        memory.add(observation, action, time_step.reward, time_step.observation['position'], time_step.last())
+        memory.add(observation, action, dep_output, time_step.reward, time_step.observation['position'], time_step.last())
 
         # Update actor and critic
-        states, actions, rewards, next_states, dones = memory.sample(batch_size)
+        states, actions, dep_outputs, rewards, next_states, dones = memory.sample(batch_size)
 
-        target_actions = actor_target(next_states)
+        target_actions = actor_target.forward_no_step(next_states, dep_outputs)
         target_q_values = critic_target(next_states, target_actions)
         q_targets = rewards + (1 - dones) * gamma * target_q_values.squeeze(1)
         q_values = critic(states, actions).squeeze(1)
@@ -144,7 +147,7 @@ for e in range(num_episodes):
         critic_loss.backward()
         critic_adam.step()
 
-        actor_loss = -critic(states, actor(states)).mean()
+        actor_loss = -critic(states, actor.forward_no_step(states, dep_outputs)).mean()
 
         actor_adam.zero_grad()
         actor_loss.backward()
