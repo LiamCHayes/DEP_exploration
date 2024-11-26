@@ -86,7 +86,7 @@ batch_size = 32
 gamma = 0.95
 update_freq = 50
 dep_probability = 0.25
-dep_length = 10
+dep_length = 5
 dep_countdown = 0
 
 # Fill the replay buffer with DEP experiences
