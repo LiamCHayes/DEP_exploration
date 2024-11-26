@@ -193,6 +193,7 @@ for e in range(num_episodes):
     print("Critic Loss: ", total_critic_loss)
     episode_actor_loss.append(total_actor_loss)
     episode_critic_loss.append(total_critic_loss)
+    episode_reward.append(total_reward)
 
     # Make a progress report video once in a while
     if reporting:

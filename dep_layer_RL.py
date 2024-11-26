@@ -83,7 +83,7 @@ progress_report_freq = 100
 memory = ReplayBuffer(maxlen=1000)
 batch_size = 32
 gamma = 0.95
-update_freq = 50
+update_freq = 100
 
 # Fill the replay buffer with DEP experiences
 while memory.len() < batch_size:
@@ -160,7 +160,7 @@ for e in range(num_episodes):
         critic_loss.backward()
         critic_adam.step()
 
-        actor_loss = -critic(states, actor.forward_no_step(states, dep_outputs)).mean()
+        actor_loss = critic(states, actor.forward_no_step(states, dep_outputs)).mean()
 
         actor_adam.zero_grad()
         actor_loss.backward()

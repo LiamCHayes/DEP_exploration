@@ -25,24 +25,10 @@ high_reward[seq(10),] %>% filter(tau == 13)
 # sigma = 5.25
 # delta_t <= 2
 
-
-# Deep model matrix analysis, ten thousand episode run
-df <- read.csv('dep_deep_backprop_results/best_params/metrics.csv')
-
-# Only take rewards bigger than 50
-df_high_reward <- df %>%
-    filter(reward > 20)
-
+df <- read.csv('dep_backprop_results/init/metrics.csv')
+colnames(df)
 ggplot(data=df) +
-    geom_point(aes(x=X, y=reward)) 
+    geom_point(aes(x=X, y=loss), col='red')
 
-ggplot(data=df_high_reward) +
-    geom_point(aes(x=X, y=reward))
-
-plot(df_high_reward$X)
-
-# First layer dep init
-df <- read.csv('dep_layer_results/init/metrics.csv')
-df
-ggplot(data=df) +
+ggplot(data=df) + 
     geom_point(aes(x=X, y=reward))
