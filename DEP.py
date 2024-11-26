@@ -144,7 +144,7 @@ class DEP:
         """
         Forward pass for the one-layer DEP network (controller matrix with tanh activation)
         """
-        q = torch.einsum('ijk, ik -> ij', self.C_normalized, self.x_smoothed)
+        q = torch.matmul(self.C_normalized, self.x_smoothed)
         q = q / (torch.norm(q) + 1e-5)
         y = torch.tanh(self.kappa * q + self.h) * self.sigma
         return y
@@ -265,3 +265,12 @@ class BatchedDEP(DEPDeepModel):
 
         # Compute bias h
         self.h = torch.tanh(self.memory[-1][1] * self.beta)/2 * self.h * 0.001
+
+    def _get_action(self):
+        """
+        Forward pass for the one-layer DEP network (controller matrix with tanh activation)
+        """
+        q = torch.einsum('ijk, ik -> ij', self.C_normalized, self.x_smoothed)
+        q = q / (torch.norm(q) + 1e-5)
+        y = torch.tanh(self.kappa * q + self.h) * self.sigma
+        return y
