@@ -201,7 +201,7 @@ for e in range(num_episodes):
         torch.save(actor.state_dict(), f'dep_RL_results/{args.name}/ep{e}_model_matrix.pth')
 
 # Save metrics 
-data = np.array([total_reward, episode_actor_loss, episode_critic_loss])
+data = np.array([episode_reward, episode_actor_loss, episode_critic_loss])
 cols=['reward', 'actor_loss', 'critic_loss']
 df = pd.DataFrame(data).transpose()
 df.columns = cols
