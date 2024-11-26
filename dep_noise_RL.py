@@ -76,7 +76,8 @@ class ReplayBuffer:
 
 # Training loop variables
 episode_reward = []
-episode_loss = []
+episode_actor_loss = []
+episode_critic_loss = []
 num_episodes = int(args.episodes)
 num_steps = 500
 progress_report_freq = 100
@@ -84,7 +85,7 @@ memory = ReplayBuffer(maxlen=1000)
 batch_size = 32
 gamma = 0.95
 update_freq = 50
-dep_probability = 0.5
+dep_probability = 0.25
 dep_length = 10
 dep_countdown = 0
 
@@ -190,6 +191,8 @@ for e in range(num_episodes):
     print("Reward: ", total_reward)
     print("Actor Loss: ", total_actor_loss)
     print("Critic Loss: ", total_critic_loss)
+    episode_actor_loss.append(total_actor_loss)
+    episode_critic_loss.append(total_critic_loss)
 
     # Make a progress report video once in a while
     if reporting:
@@ -197,7 +200,7 @@ for e in range(num_episodes):
         torch.save(actor.state_dict(), f'dep_RL_results/{args.name}/ep{e}_model_matrix.pth')
 
 # Save metrics 
-data = np.array([total_reward, actor_loss, critic_loss])
+data = np.array([total_reward, episode_actor_loss, episode_critic_loss])
 cols=['reward', 'actor_loss', 'critic_loss']
 df = pd.DataFrame(data).transpose()
 df.columns = cols
