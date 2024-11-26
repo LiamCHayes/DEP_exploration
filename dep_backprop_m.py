@@ -8,6 +8,7 @@ import torch
 from tqdm import tqdm
 import pandas as pd
 import argparse
+import matplotlib.pyplot as plt
 
 from DEP import DEP
 from utils import make_video, see_live
@@ -17,6 +18,7 @@ from utils import print_and_pause
 def argparser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-n', '--name', help='Name of this run', required=True)
+    parser.add_argument('-r', '--reporting', action='store_true', help='Whether to make videos or not')
     args = parser.parse_args()
     return args
 
@@ -44,9 +46,9 @@ dep_controller.M.retain_grad()
 # Training loop variables
 episode_reward = []
 episode_loss = []
-num_episodes = 2000
+num_episodes = 100
 num_steps = 300
-progress_report_freq = 100
+progress_report_freq = 10
 
 # Training loop
 for e in range(num_episodes):
@@ -60,7 +62,7 @@ for e in range(num_episodes):
 
     # Determine if we are reporting or not
     if e % progress_report_freq == 0:
-        reporting = True
+        reporting = args.reporting
         frames = []
     else:
         reporting = False
@@ -83,14 +85,14 @@ for e in range(num_episodes):
             frames.append(frame)
 
         # Update model matrix if there has been a learning step
-        if dep_controller.C is not None:
+        if dep_controller.C is not None and t % 10 == 0:
             # Compute loss 
             prev_action = dep_controller.memory[-delta_t][1]
             Mx = torch.matmul(dep_controller.M, torch.tensor(observation, dtype=torch.float32).to(device))
             loss = torch.sum((Mx - prev_action)**2)
 
             # Update step
-            loss.backward(retain_graph=True)
+            loss.backward()
             with torch.no_grad():
                 dep_controller.M -= lr * dep_controller.M.grad
             dep_controller.M.grad.zero_()
@@ -109,7 +111,7 @@ for e in range(num_episodes):
     print('Total reward: ', total_reward)
     print('Total loss: ', total_loss.item())
     episode_reward.append(total_reward)
-    episode_loss.append(total_loss)
+    episode_loss.append(total_loss.item())
 
     # Make a progress report video once in a while
     if reporting:

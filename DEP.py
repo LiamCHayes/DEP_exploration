@@ -131,7 +131,8 @@ class DEP:
         for s in update_set:
             chi = self.memory[-s][0] - self.memory[-(s+1)][0]
             nu = self.memory[-(s+self.delta_t)][0] - self.memory[-(s+self.delta_t+1)][0]
-            mu = torch.matmul(self.M, chi)
+            with torch.no_grad():
+                mu = torch.matmul(self.M, chi)
             self.C = + self.C + torch.einsum('j, k->jk', mu, nu)
 
         # Normalize C

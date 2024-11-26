@@ -29,6 +29,7 @@ def see_live(frames):
         im.set_array(m)
         plt.draw()
         plt.pause(0.02)
+    plt.close()
 
 
 def print_and_pause(variable, message=""):

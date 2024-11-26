@@ -16,16 +16,16 @@ from utils import print_and_pause
 # Load environment and DEP controller
 env = suite.load(domain_name="cheetah", task_name="run")
 
-tau = 40
+tau = 13
 kappa = 1000
-beta = 0.002
-sigma = 1
-delta_t = 4
+beta = 0.0025
+sigma = 5.25
+delta_t = 1
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 action_size = env.action_spec().shape[0]
 observation_size = env.observation_spec()['position'].shape[0]
 dep_controller = DEP(tau, kappa, beta, sigma, delta_t, device, action_size, observation_size)
-dep_controller.set_model(torch.load("dep_backprop_results/init_ep10_model_matrix.pt"))
+#dep_controller.set_model(torch.load("dep_backprop_results/init_ep10_model_matrix.pt"))
 
 # Initialize lists to track DEP
 frames = []
