@@ -9,6 +9,7 @@ import numpy as np
 from tqdm import tqdm
 import random
 import pandas as pd
+import argparse
 
 from dep_networks import FirstLayerDEP
 from critic_networks import SimpleCritic
@@ -16,6 +17,16 @@ from critic_networks import SimpleCritic
 from utils import make_video
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# Argparser
+def argparser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-n', '--name', help='Name of this run', required=True)
+    parser.add_argument('-e', '--episodes', help='Number of episodes to train for', required=True)
+    args = parser.parse_args()
+    return args
+
+args = argparser()
 
 # Load env
 env = suite.load(domain_name="cheetah", task_name="run")
@@ -65,7 +76,7 @@ class ReplayBuffer:
 # Training loop variables
 episode_reward = []
 episode_loss = []
-num_episodes = 1001
+num_episodes = int(args.episodes)
 num_steps = 500
 progress_report_freq = 100
 memory = ReplayBuffer(maxlen=1000)
@@ -171,16 +182,16 @@ for e in range(num_episodes):
 
     # Make a progress report video once in a while
     if reporting:
-        make_video(frames, f"dep_layer_results/init/ep{e}_progress_report")
-        torch.save(actor.state_dict(), f'dep_layer_results/init/ep{e}_model_matrix.pth')
+        make_video(frames, f"dep_layer_results/{args.name}/ep{e}_progress_report")
+        torch.save(actor.state_dict(), f'dep_layer_results/{args.name}/ep{e}_model_matrix.pth')
 
 # Save metrics 
-data = np.array([episode_reward, episode_loss])
-cols=['reward', 'loss']
+data = np.array([total_reward, actor_loss, critic_loss])
+cols=['reward', 'actor_loss', 'critic_loss']
 df = pd.DataFrame(data).transpose()
 df.columns = cols
-df.to_csv('dep_layer_results/init/metrics.csv')  
+df.to_csv(f'dep_layer_results/{args.name}/metrics.csv')  
 
 # Save model
-make_video(frames, f"dep_layer_results/init/ep{e}_progress_report")
-torch.save(actor.state_dict(), 'dep_layer_results/init/model_matrix.pth')
+make_video(frames, f"dep_layer_results/{args.name}/ep{e}_progress_report")
+torch.save(actor.state_dict(), f'dep_layer_results/{args.name}/model_matrix.pth')

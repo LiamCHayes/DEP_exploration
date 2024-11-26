@@ -40,3 +40,9 @@ ggplot(data=df_high_reward) +
     geom_point(aes(x=X, y=reward))
 
 plot(df_high_reward$X)
+
+# First layer dep init
+df <- read.csv('dep_layer_results/init/metrics.csv')
+df
+ggplot(data=df) +
+    geom_point(aes(x=X, y=reward))
