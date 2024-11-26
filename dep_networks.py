@@ -6,7 +6,7 @@ from typing import Any, Mapping
 import torch
 import torch.nn as nn
 
-from DEP import BatchedDEP
+from DEP import DEP, BatchedDEP
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

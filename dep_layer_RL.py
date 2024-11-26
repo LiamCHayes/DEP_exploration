@@ -65,7 +65,7 @@ class ReplayBuffer:
 # Training loop variables
 episode_reward = []
 episode_loss = []
-num_episodes = 2001
+num_episodes = 1001
 num_steps = 500
 progress_report_freq = 100
 memory = ReplayBuffer(maxlen=1000)
@@ -127,8 +127,9 @@ for e in range(num_episodes):
             frame = env.physics.render(camera_id = 'side')
             frames.append(frame)
 
-        # Update the DEP inverse prediction model
-        dep_model_loss = actor.learn_dep_model(observation)
+        # Update the DEP inverse prediction model once in a while
+        if e % update_freq == 0:
+            dep_model_loss = actor.learn_dep_model(observation)
 
         # Store experience in memory
         memory.add(observation, action, dep_output, time_step.reward, time_step.observation['position'], time_step.last())
