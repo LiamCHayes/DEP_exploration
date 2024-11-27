@@ -136,7 +136,10 @@ class DEP:
             self.C = self.C + torch.einsum('j, k->jk', mu, nu)
 
         # Normalize C
-        self.C_normalized = self.C
+        self.C_normalized = torch.zeros((self._action_size, self._observation_size)).to(self._device)
+        for row in range(self.C.shape[0]):
+            for col in range(self.C.shape[1]):
+                self.C_normalized[row, col] = self.kappa * self.C[row, col] / (torch.norm(self.C[row, :]) + 1e-12)
 
         # Compute bias h
         self.h = torch.tanh(self.memory[-1][1] * self.beta)/2 * self.h * 0.001

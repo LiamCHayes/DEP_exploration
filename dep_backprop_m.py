@@ -28,8 +28,8 @@ args = argparser()
 env = suite.load(domain_name="cheetah", task_name="run")
 
 # Load up DEP controller
-tau = 13
-kappa = 1000
+tau = 8
+kappa = 0.5
 beta = 0.0025
 sigma = 5.25
 delta_t = 1
@@ -40,7 +40,7 @@ observation_size = env.observation_spec()['position'].shape[0]
 dep_controller = DEP(tau, kappa, beta, sigma, delta_t, device, action_size, observation_size)
 
 # Optimizer things
-lr = 0.01
+lr = 1e-3
 dep_controller.M.retain_grad()
 
 # Training loop variables
@@ -94,7 +94,7 @@ for e in range(num_episodes):
             # Update step
             loss.backward()
             with torch.no_grad():
-                dep_controller.M += lr * dep_controller.M.grad
+                dep_controller.M -= lr * dep_controller.M.grad
             dep_controller.M.grad.zero_()
         else:
             loss = 0
