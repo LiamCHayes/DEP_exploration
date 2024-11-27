@@ -79,7 +79,7 @@ episode_actor_loss = []
 episode_critic_loss = []
 num_episodes = int(args.episodes)
 num_steps = 500
-progress_report_freq = 100
+progress_report_freq = 10
 memory = ReplayBuffer(maxlen=1000)
 batch_size = 32
 gamma = 0.95
@@ -144,7 +144,6 @@ for e in range(num_episodes):
         
         # Do the action
         action = action.cpu().detach().numpy()
-        print(action)
         time_step = env.step(action)
 
         # Store experience in memory
