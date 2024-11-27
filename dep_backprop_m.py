@@ -48,7 +48,7 @@ episode_reward = []
 episode_loss = []
 num_episodes = 100
 num_steps = 300
-progress_report_freq = 10
+progress_report_freq = 1
 
 # Training loop
 for e in range(num_episodes):
@@ -94,7 +94,7 @@ for e in range(num_episodes):
             # Update step
             loss.backward()
             with torch.no_grad():
-                dep_controller.M -= lr * dep_controller.M.grad
+                dep_controller.M += lr * dep_controller.M.grad
             dep_controller.M.grad.zero_()
         else:
             loss = 0
@@ -113,7 +113,9 @@ for e in range(num_episodes):
     episode_reward.append(total_reward)
     episode_loss.append(total_loss.item())
 
-    # Make a progress report video once in a while
+    see_live(frames)
+
+    """# Make a progress report video once in a while
     if reporting:
         make_video(frames, f"dep_backprop_results/{args.name}/ep{e}_progress_report")
         torch.save(dep_controller.M, f'dep_backprop_results/{args.name}/ep{e}_model_matrix.pt')
@@ -134,3 +136,4 @@ df.to_csv(f'dep_backprop_results/{args.name}/dep_parameters.csv')
 
 # Save model matrix
 torch.save(dep_controller.M, f'dep_backprop_results/{args.name}/model_matrix.pt')
+"""
