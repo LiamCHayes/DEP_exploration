@@ -227,7 +227,8 @@ class BatchedDEP(DEPDeepModel):
             x = torch.tensor(x, dtype=torch.float32).to(self._device)
 
         # Set batch size
-        self._batch_size = x.shape[0]
+        if self._batch_size is None:
+            self._batch_size = x.shape[0]
 
         # Smooth the observation x
         if self.x_smoothed is None:
