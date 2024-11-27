@@ -84,8 +84,8 @@ progress_report_freq = 100
 memory = ReplayBuffer(maxlen=1000)
 batch_size = 32
 gamma = 0.95
-update_freq = 50
-dep_probability = 0.25
+update_freq = 75
+dep_probability = 0.05
 dep_length = 5
 dep_countdown = 0
 
