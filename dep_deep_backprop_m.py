@@ -27,8 +27,8 @@ args = argparser()
 env = suite.load(domain_name="cheetah", task_name="run")
 
 # Load up DEP controller
-tau = 13
-kappa = 1000
+tau = 8
+kappa = 0.5
 beta = 0.0025
 sigma = 5.25
 delta_t = 1
@@ -47,7 +47,7 @@ episode_reward = []
 episode_loss = []
 num_episodes = int(args.episodes)
 num_steps = 500
-progress_report_freq = 500
+progress_report_freq = 1
 
 # Training loop
 for e in range(num_episodes):
@@ -113,10 +113,13 @@ for e in range(num_episodes):
     episode_reward.append(total_reward)
     episode_loss.append(total_loss.item())
 
-    # Make a progress report video once in a while
+    see_live(frames)
+
+    """# Make a progress report video once in a while
     if reporting:
         make_video(frames, f"dep_deep_backprop_results/{args.name}/ep{e}_progress_report")
         torch.save(dep_controller.M, f'dep_deep_backprop_results/{args.name}/ep{e}_model_matrix.pt')
+    """
 
 # Save episode rewards and losses
 data = np.array([episode_reward, episode_loss])
@@ -133,4 +136,4 @@ df.columns = cols
 df.to_csv(f'dep_deep_backprop_results/{args.name}/dep_parameters.csv')
 
 # Save model matrix
-torch.save(dep_controller.M, f'dep_deep_backprop_results/{args.name}/model_matrix.pt')
+torch.save(dep_controller.M, f'dep_deep_backprop_results/{args.name}/dep_deep_model_matrix_trained.pt')
