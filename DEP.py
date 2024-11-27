@@ -269,10 +269,11 @@ class BatchedDEP(DEPDeepModel):
             self.C = self.C + torch.einsum('ij, ik->ijk', mu, nu)
 
         # Normalize C
-        self.C_normalized = torch.zeros((self._action_size, self._observation_size)).to(self._device)
-        for row in range(self.C.shape[0]):
-            for col in range(self.C.shape[1]):
-                self.C_normalized[row, col] = self.kappa * self.C[row, col] / (torch.norm(self.C[row, :]) + 1e-12)
+        self.C_normalized = torch.zeros((self._batch_size, self._action_size, self._observation_size)).to(self._device)
+        for b in range(self.C.shape[0]):
+            for row in range(self.C.shape[1]):
+                for col in range(self.C.shape[2]):
+                    self.C_normalized[b, row, col] = self.kappa * self.C[b, row, col] / (torch.norm(self.C[b, row, :]) + 1e-12)
 
         # Compute bias h
         self.h = torch.tanh(self.memory[-1][1] * self.beta)/2 * self.h * 0.001
