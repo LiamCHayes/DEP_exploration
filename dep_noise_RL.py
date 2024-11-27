@@ -171,7 +171,7 @@ for e in range(num_episodes):
         critic_loss.backward()
         critic_adam.step()
 
-        actor_loss = -critic(states, actor(states)).mean()
+        actor_loss = critic(states, actor(states)).mean()
 
         actor_adam.zero_grad()
         actor_loss.backward()
