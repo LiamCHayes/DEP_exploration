@@ -84,8 +84,8 @@ memory = ReplayBuffer(maxlen=1000)
 batch_size = 32
 gamma = 0.95
 update_freq = 75
-dep_probability = 0.05
-dep_length = 5
+dep_probability = 0.6
+dep_length = 10
 dep_countdown = 0
 
 # Fill the replay buffer with DEP experiences
@@ -116,6 +116,8 @@ for e in range(num_episodes):
     total_reward = 0
     total_actor_loss = 0
     total_critic_loss = 0
+    if e % 500 == 0:
+        dep_probability -= 0.05
 
     # Determine if we are reporting or not
     if e % progress_report_freq == 0:
