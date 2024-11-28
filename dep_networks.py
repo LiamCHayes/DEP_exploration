@@ -155,6 +155,7 @@ class DEPActor(nn.Module):
         self.last_dep_action = None
         self.lr = imitation_lr
         self.optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
+        self.im_loss = None
 
     def forward(self, observation):
         """
@@ -193,6 +194,7 @@ class DEPActor(nn.Module):
         # Imitation update step
         loss = self.imitation_loss()
         self.imitation_step(loss)
+        self.im_loss = loss
 
         return action.unsqueeze(0)
     

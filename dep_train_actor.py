@@ -35,7 +35,7 @@ env = suite.load(domain_name="cheetah", task_name="run")
 action_size = env.action_spec().shape[0]
 observation_size = env.observation_spec()['position'].shape[0]
 
-actor = DEPActor(observation_size, action_size, 1e-3)
+actor = DEPActor(observation_size, action_size, 1e-5)
 critic = SimpleCritic(action_size, observation_size)
 
 actor_target = DEPActor(observation_size, action_size, 1e-3)
@@ -43,7 +43,7 @@ actor_target.load_state_dict(state_dict = actor.state_dict())
 critic_target = SimpleCritic(action_size, observation_size)
 critic_target.load_state_dict(critic.state_dict())
 
-lr = 1e-2
+lr = 1e-4
 actor_adam = torch.optim.Adam(actor.parameters(), lr=lr)
 critic_adam = torch.optim.Adam(critic.parameters(), lr=lr)
 

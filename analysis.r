@@ -25,7 +25,7 @@ high_reward[seq(10),] %>% filter(tau == 13)
 # sigma = 5.25
 # delta_t <= 2
 
-df <- read.csv('deep_dep_results/test/metrics.csv')
+df <- read.csv('deep_dep_results/init/metrics.csv')
 colnames(df)
 ggplot(data=df) +
     geom_point(aes(x=X, y=actor_loss), col='red')
