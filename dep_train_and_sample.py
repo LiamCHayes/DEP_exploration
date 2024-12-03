@@ -82,7 +82,7 @@ episode_critic_loss = []
 kappas = []
 num_episodes = int(args.episodes)
 num_steps = 500
-progress_report_freq = 5
+progress_report_freq = 250
 memory = ReplayBuffer(maxlen=1000)
 batch_size = 32
 gamma = 0.95
