@@ -183,7 +183,6 @@ class DEPActor(nn.Module):
 
         # Turn the (batch_size, 1) tensor into a linear input
         lin_input = encoded_states.squeeze()
-        print(lin_input)
 
         # Get action
         action = self.network_controller(lin_input)
