@@ -44,9 +44,10 @@ for e in range(num_episodes):
         action = action.cpu().detach().numpy()
         time_step = env.step(action)
 
-        total_loss += actor.im_loss.item()
+        if actor.im_loss is not None:
+            total_loss += actor.im_loss.item()
 
-        if e % 10 == 0:
+        if e % 100 == 0:
             # Adjust camera positon
             agent_pos = env.physics.named.data.xpos['torso']
             env.physics.named.data.cam_xpos['side'][0] = agent_pos[0]
@@ -62,9 +63,9 @@ for e in range(num_episodes):
     episode_loss.append(total_loss)
     print('Loss: ', total_loss)
 
-    if e % 10 == 0:
+    if e % 100 == 0:
         # Visualize
         see_live(frames)
 
         # Save model
-        torch.save(actor.load_state_dict(), 'deep_dep_results/imitation.pth')
+        torch.save(actor.state_dict(), 'deep_dep_results/imitation.pth')

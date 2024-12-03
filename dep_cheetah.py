@@ -29,45 +29,51 @@ dep_controller = DEP(tau, kappa, beta, sigma, delta_t, device, action_size, obse
 # Initialize lists to track DEP
 frames = []
 weights = []
+rewards = []
 
 # Do simulation
 num_steps = 500
-time_step = env.reset()
 fig, ax = plt.subplots()
-for t in tqdm(range(num_steps)):
-    # Get action and do it
-    observation = time_step.observation['position']
-    action = dep_controller.step(observation)
-    time_step = env.step(action)
+for e in tqdm(range(32)):
+    total_reward = 0
+    time_step = env.reset()
+    for t in range(num_steps):
+        # Get action and do it
+        observation = time_step.observation['position']
+        action = dep_controller.step(observation)
+        time_step = env.step(action)
 
-    # Adjust camera positon
-    agent_pos = env.physics.named.data.xpos['torso']
-    env.physics.named.data.cam_xpos['side'][0] = agent_pos[0]
-    
-    # Render frame and save
-    frame = env.physics.render(camera_id = 'side')
-    frames.append(frame)
+        total_reward = total_reward + time_step.reward
 
-    if len(frames) == 1:
-        im = ax.imshow(frames[0], cmap='viridis', animated=True)
-    else:
-        im.set_array(frame)
-        plt.draw()
-        plt.pause(0.02)
+        # Adjust camera positon
+        """agent_pos = env.physics.named.data.xpos['torso']
+        env.physics.named.data.cam_xpos['side'][0] = agent_pos[0]
+        
+        # Render frame and save
+        frame = env.physics.render(camera_id = 'side')
+        frames.append(frame)
 
-    # Save DEP weights
-    if dep_controller.C_normalized is not None:
-        w = dep_controller.C_normalized.cpu().detach().numpy()
-        weights.append(w)
+        if len(frames) == 1:
+            im = ax.imshow(frames[0], cmap='viridis', animated=True)
+        else:
+            im.set_array(frame)
+            plt.draw()
+            plt.pause(0.02)"""
 
-    # Break if episode is over
-    if time_step.last():
-        break
+        # Save DEP weights
+        if dep_controller.C_normalized is not None:
+            w = dep_controller.C_normalized.cpu().detach().numpy()
+            weights.append(w)
 
-plt.close()
+        # Break if episode is over
+        if time_step.last():
+            break
+    rewards.append(total_reward)
+
+#plt.close()
 
 # Visualize
-see_live(frames)
-see_live(weights)
+"""see_live(frames)
+see_live(weights)"""
 
 #make_video(frames, 'videos/scaling_tau')

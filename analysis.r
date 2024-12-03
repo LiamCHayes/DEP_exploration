@@ -32,3 +32,10 @@ ggplot(data=df) +
 
 ggplot(data=df) + 
     geom_point(aes(x=X, y=reward))
+
+# Thompson sampling
+df <- read.csv('thompson_sampling_results/kappa_sampling.csv')
+colnames(df)
+
+ggplot(data=df) +
+    geom_point(aes(x=reward, y=kappa))
