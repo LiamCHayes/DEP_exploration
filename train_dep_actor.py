@@ -72,7 +72,7 @@ dep_choice_proportion = []
 avg_dep_threshold = []
 num_episodes = int(args.episodes)
 num_steps = 500
-progress_report_freq = 100
+progress_report_freq = 250
 memory = ReplayBuffer(maxlen=10000)
 batch_size = 32
 gamma = 0.95
