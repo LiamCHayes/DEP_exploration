@@ -5,8 +5,11 @@ A neural network with DEP layers
 from typing import Any, Mapping
 import torch
 import torch.nn as nn
+from collections import deque
+import random
 
 from DEP import DEP, BatchedDEP
+from ThompsonSamplers import ThomsonSampling
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -255,3 +258,194 @@ class DEPActor(nn.Module):
         Resets the DEP controller
         """
         self.dep_controller.reset()
+
+# Network that controls when to turn on DEP
+class ActorControlsDEP(nn.Module):
+    """
+    A neural network that can cotnrol when DEP is being turned on. 
+
+    """
+    def __init__(self, position_size, velocity_size, action_size):
+        super(ActorControlsDEP, self).__init__()
+
+        # DEP controller
+        self.dep_controller = DEPLayer(position_size, action_size)
+        self.dep_controller._batch_size = 1
+
+        # DEP threshold sampler and memory
+        arms = torch.linspace(0, 1, 10)
+        self.thresh_sampler = ThomsonSampling(arms, window_size=100, prior_mean=10)
+        self.threshold = None
+        self.dep_choice = None
+        self.current_state = None
+        self.memory = self.ReplayBuffer(256)
+
+        # Network that chooses whether DEP gets turned on 
+        self.decide_dep = nn.Sequential(
+            nn.Linear(position_size+velocity_size, 64),
+            nn.ReLU(),
+            nn.Linear(64, 32),
+            nn.ReLU(),
+            nn.Linear(32, 16),
+            nn.ReLU(),
+            nn.Linear(16, 1),
+            nn.Sigmoid()
+        ).to(device)
+        self.decide_dep_optimizer = torch.optim.Adam(self.decide_dep.parameters(), lr = 0.001)
+        self.dep_target = nn.Sequential(
+            nn.Linear(position_size+velocity_size, 64),
+            nn.ReLU(),
+            nn.Linear(64, 32),
+            nn.ReLU(),
+            nn.Linear(32, 16),
+            nn.ReLU(),
+            nn.Linear(16, 1),
+            nn.Sigmoid()
+        ).to(device)
+
+        # Network that predicts an action based on positions and velocities
+        self.decide_action = nn.Sequential(
+            nn.Linear(position_size+velocity_size, 64),
+            nn.ReLU(),
+            nn.Linear(64, 32),
+            nn.ReLU(),
+            nn.Linear(32, 16),
+            nn.ReLU(),
+            nn.Linear(16, action_size),
+            nn.Tanh()
+        ).to(device)
+        self.action_target = nn.Sequential(
+            nn.Linear(position_size+velocity_size, 64),
+            nn.ReLU(),
+            nn.Linear(64, 32),
+            nn.ReLU(),
+            nn.Linear(32, 16),
+            nn.ReLU(),
+            nn.Linear(16, action_size),
+            nn.Tanh()
+        ).to(device)
+
+        # Timesteps/countdowns
+        self.dep_countdown = 0
+        self.t = 0
+
+    def forward(self, positions, velocities):
+        """
+        First step determines whether DEP gets turned on or not
+        If DEP gets turned on:
+            Calculate for how long and do DEP for that long
+        Else:
+            Predict an action
+        """
+        # Update timestep
+        self.t += 1
+
+        # Do DEP to store in the memory
+        dep_action = self.dep_controller.step(positions)
+
+        # Get and store current state
+        self.current_state = torch.concat((positions, velocities), dim=0)
+
+        if self.dep_countdown == 0:
+            # Decide if we will do DEP
+            dep_prob = self.decide_dep(self.current_state)
+            self.threshold = self.thresh_sampler.select_arm()
+
+            self.dep_choice = int(dep_prob > self.threshold)
+
+            if self.dep_choice == 1:
+                self.dep_countdown = 5 # In the future, make a network or sampler to tune this
+            else:
+                # Do network action
+                action = self.decide_action(self.current_state)
+                action = action.unsqueeze(0)
+        
+        # Return DEP action if the network says so
+        if self.dep_countdown > 0:
+            self.dep_choice = 1
+            action = dep_action
+            self.dep_countdown -= 1
+
+        return action, self.dep_choice
+    
+    def only_network(self, state):
+        """
+        Only forward pass on the actiond decision network
+        """
+        action = self.decide_action(state)
+
+        return action
+
+    def update_dep_network(self):
+        """
+        Updates the policy and target networks for the dep decision
+        """
+        batch_size = self.memory.len() if self.memory.len() < 32 else 32
+        batch = self.memory.sample(batch_size)
+
+        # Based on the current states
+        current_q = self.decide_dep(batch[0])
+
+        # Based on the next states
+        t_q = self.dep_target(batch[3]) > self.threshold
+        target_q = batch[2] + 0.95 * t_q
+
+        # Compute loss
+        loss = torch.nn.functional.mse_loss(current_q, target_q)
+
+        # Update step
+        self.decide_dep_optimizer.zero_grad()
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(self.decide_dep.parameters(), 1)
+        self.decide_dep_optimizer.step()
+    
+    def update_memories(self, reward, next_state, done):
+        """
+        Updates memory and the sampler for DEP threshold
+        """
+        # Update sampler
+        self.thresh_sampler.update(self.threshold, reward)
+
+        # Update memory
+        self.memory.add(self.current_state, self.dep_choice, reward, next_state, done)
+
+    def update_targets(self):
+        """
+        Updates targets for the networks
+        """
+        self.action_target.load_state_dict(self.decide_action.state_dict())
+        self.dep_target.load_state_dict(self.decide_dep.state_dict())
+
+    def only_dep(self, observation):
+        """
+        Forward pass on only DEP
+        """
+        dep_action = self.dep_controller.step(observation)
+        return dep_action
+
+    def reset(self):
+        """
+        Resets the DEP controller
+        """
+        self.dep_controller.reset()
+
+    class ReplayBuffer:
+        def __init__(self, maxlen):
+            self.memory = deque(maxlen=maxlen)
+
+        def add(self, state, action, reward, next_state, done):
+            self.memory.append((state, action, reward, next_state, done))
+
+        def sample(self, batch_size):
+            batch = random.sample(self.memory, batch_size)
+            states, actions, rewards, next_states, dones = zip(*batch)
+
+            # Convert to tensors
+            actions = [torch.tensor(a, dtype=torch.float32).to(device) for a in actions]
+            rewards = [torch.tensor(r, dtype=torch.float32).to(device) for r in rewards]
+            dones = [torch.tensor(d, dtype=torch.int32).to(device) for d in dones]
+
+            return torch.stack(states), torch.stack(actions), torch.stack(rewards), torch.stack(next_states), torch.stack(dones)
+
+        def len(self):
+            return len(self.memory)

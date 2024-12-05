@@ -23,7 +23,7 @@ action_size = env.action_spec().shape[0]
 observation_size = env.observation_spec()['position'].shape[0]
 
 model = DEPActor(observation_size, action_size, 0.001)
-weights = torch.load("deep_dep_results/less_lr/ep4500_model_matrix.pth")
+weights = torch.load("deep_dep_results/bandit/ep2750_model_matrix.pth")
 model.load_state_dict(weights)
 
 # Initialize lists to track DEP

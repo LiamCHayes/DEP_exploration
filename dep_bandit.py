@@ -50,20 +50,19 @@ for e in range(num_episodes):
 
     # Run simulation num_samples times per parameter combination
     tot_rew = 0
-    for s in range(num_samples):
-        time_step = env.reset()
-        for t in range(num_steps):
-            # Get action and do it
-            observation = time_step.observation['position']
-            action = dep_controller.step(observation)
-            time_step = env.step(action)
+    time_step = env.reset()
+    for t in range(num_steps):
+        # Get action and do it
+        observation = time_step.observation['position']
+        action = dep_controller.step(observation)
+        time_step = env.step(action)
 
-            # Measure reward
-            tot_rew += time_step.reward
+        # Measure reward
+        tot_rew += time_step.reward
 
-            # Break if episode is over
-            if time_step.last():
-                break
+        # Break if episode is over
+        if time_step.last():
+            break
     
     # Update samplers
     mean_rew = tot_rew / num_samples
