@@ -79,12 +79,12 @@ episode_actor_loss = []
 episode_critic_loss = []
 num_episodes = int(args.episodes)
 num_steps = 500
-progress_report_freq = 250
-memory = ReplayBuffer(maxlen=1000)
-batch_size = 32
+progress_report_freq = 1000
+memory = ReplayBuffer(maxlen=1000000)
+batch_size = 512
 gamma = 0.95
 update_freq = 75
-dep_probability = 0.6
+dep_probability = 0.75
 dep_length = 10
 dep_countdown = 0
 
@@ -117,7 +117,7 @@ for e in range(num_episodes):
     total_actor_loss = 0
     total_critic_loss = 0
     if e % 500 == 0:
-        dep_probability -= 0.05
+        dep_probability -= 0.01
 
     # Determine if we are reporting or not
     if e % progress_report_freq == 0:

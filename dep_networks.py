@@ -263,7 +263,6 @@ class DEPActor(nn.Module):
 class ActorControlsDEP(nn.Module):
     """
     A neural network that can cotnrol when DEP is being turned on. 
-
     """
     def __init__(self, position_size, velocity_size, action_size):
         super(ActorControlsDEP, self).__init__()
