@@ -206,12 +206,12 @@ for e in range(num_episodes):
         make_video(frames, f"deep_dep_results/{args.name}/ep{e}_progress_report")
         torch.save(actor.state_dict(), f'deep_dep_results/{args.name}/ep{e}_model_matrix.pth')
 
-# Save metrics 
-data = np.array([episode_reward, episode_actor_loss, episode_critic_loss])
-cols=['reward', 'actor_loss', 'critic_loss']
-df = pd.DataFrame(data).transpose()
-df.columns = cols
-df.to_csv(f'deep_dep_results/{args.name}/metrics.csv')  
+    # Save metrics 
+    data = np.array([episode_reward, episode_actor_loss, episode_critic_loss])
+    cols=['reward', 'actor_loss', 'critic_loss']
+    df = pd.DataFrame(data).transpose()
+    df.columns = cols
+    df.to_csv(f'deep_dep_results/{args.name}/metrics.csv')  
 
 # Save model
 make_video(frames, f"deep_dep_results/{args.name}/ep{e}_progress_report")
