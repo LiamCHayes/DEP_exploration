@@ -1,5 +1,5 @@
 """
-Deep reinforcement learning with DEP as part of the network input
+Deep reinforcement learning with DEP as noise
 """
 
 from dm_control import suite
@@ -35,7 +35,7 @@ env = suite.load(domain_name="cheetah", task_name="run")
 action_size = env.action_spec().shape[0]
 observation_size = env.observation_spec()['position'].shape[0]
 
-dep_controller = DEP(13, 1000, 0.0025, 5.25, 1, device, action_size, observation_size)
+dep_controller = DEP(8, 0.5, 0.0025, 5.25, 1, device, action_size, observation_size)
 
 actor = SimpleActor(observation_size, action_size)
 critic = SimpleCritic(action_size, observation_size)
@@ -45,7 +45,7 @@ actor_target.load_state_dict(state_dict = actor.state_dict())
 critic_target = SimpleCritic(action_size, observation_size)
 critic_target.load_state_dict(critic.state_dict())
 
-lr = 0.01
+lr = 1e-3
 actor_adam = torch.optim.Adam(actor.parameters(), lr=lr)
 critic_adam = torch.optim.Adam(critic.parameters(), lr=lr)
 
@@ -80,12 +80,11 @@ episode_actor_loss = []
 episode_critic_loss = []
 num_episodes = int(args.episodes)
 num_steps = 500
-progress_report_freq = 100
-memory = ReplayBuffer(maxlen=1000)
-batch_size = 32
+progress_report_freq = 500
+memory = ReplayBuffer(maxlen=1000000)
+batch_size = 512
 gamma = 0.95
-update_freq = 75
-dep_probability = 0.05
+update_freq = 100
 dep_length = 5
 dep_countdown = 0
 
@@ -113,6 +112,7 @@ for e in range(num_episodes):
     total_reward = 0
     total_actor_loss = 0
     total_critic_loss = 0
+    dep_probability = 1-e/num_episodes
 
     # Determine if we are reporting or not
     if e % progress_report_freq == 0:
@@ -200,12 +200,12 @@ for e in range(num_episodes):
         make_video(frames, f"dep_RL_results/{args.name}/ep{e}_progress_report")
         torch.save(actor.state_dict(), f'dep_RL_results/{args.name}/ep{e}_model_matrix.pth')
 
-# Save metrics 
-data = np.array([episode_reward, episode_actor_loss, episode_critic_loss])
-cols=['reward', 'actor_loss', 'critic_loss']
-df = pd.DataFrame(data).transpose()
-df.columns = cols
-df.to_csv(f'dep_RL_results/{args.name}/metrics.csv')  
+    # Save metrics 
+    data = np.array([episode_reward, episode_actor_loss, episode_critic_loss])
+    cols=['reward', 'actor_loss', 'critic_loss']
+    df = pd.DataFrame(data).transpose()
+    df.columns = cols
+    df.to_csv(f'dep_RL_results/{args.name}/metrics.csv')  
 
 # Save model
 make_video(frames, f"dep_RL_results/{args.name}/ep{e}_progress_report")

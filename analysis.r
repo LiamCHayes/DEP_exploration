@@ -2,50 +2,73 @@ library(dplyr)
 library(ggplot2)
 
 
-# Grid search analysis
+## Grid search analysis
 df <- read.csv('metrics/grid_rewards.csv')
+colnames(df)
+
 
 # Plots
-ggplot_data <- df %>% 
-    filter(tau == 13)
-ggplot(data=ggplot_data) +
-    geom_point(aes(x=X, y=avg_reward)) + 
-    geom_vline(xintercept = 1035)
-
-# Statistics
-high_reward <- df %>% 
-    arrange(desc(avg_reward))
-
-high_reward[seq(10),] %>% filter(tau == 13)
-
-# Best parameters
-# tau = 13
-# kappa = 1000
-# beta = 0.0025
-# sigma = 5.25
-# delta_t <= 2
-
-df <- read.csv('deep_dep_results/bandit/metrics.csv')
-colnames(df)
+mr <- df %>% 
+    group_by(tau) %>%
+    summarise(rew=mean(avg_reward))
 ggplot(data=df) +
-    geom_point(aes(x=X, y=kappas), col='red')
+    geom_jitter(aes(x=tau, y=avg_reward), width=1) +
+    geom_segment(aes(x=mr$tau[1], y=mr$rew[1], xend=mr$tau[2], yend=mr$rew[2]), col='blue') +
+    geom_segment(aes(x=mr$tau[2], y=mr$rew[2], xend=mr$tau[3], yend=mr$rew[3]), col='blue') +
+    geom_segment(aes(x=mr$tau[3], y=mr$rew[3], xend=mr$tau[4], yend=mr$rew[4]), col='blue') +
+    geom_segment(aes(x=mr$tau[4], y=mr$rew[4], xend=mr$tau[5], yend=mr$rew[5]), col='blue') +
+    labs(title='Average Reward for each Tau', x='Tau', y='Reward')
+ggsave('figures/tau_grid_search.png', width=7, height=5)
 
-ggplot(data=df) + 
-    geom_point(aes(x=X, y=reward))
-
-# Thompson sampling
-df <- read.csv('thompson_sampling_results/kappa_sampling.csv')
-colnames(df)
-
+mr <- df %>% 
+    group_by(kappa) %>%
+    summarise(rew=mean(avg_reward))
 ggplot(data=df) +
-    geom_point(aes(x=reward, y=kappa))
+    geom_jitter(aes(x=kappa, y=avg_reward), width=0.1) +
+    geom_segment(aes(x=mr$kappa[1], y=mr$rew[1], xend=mr$kappa[2], yend=mr$rew[2]), col='blue') +
+    geom_segment(aes(x=mr$kappa[2], y=mr$rew[2], xend=mr$kappa[3], yend=mr$rew[3]), col='blue') +
+    geom_segment(aes(x=mr$kappa[3], y=mr$rew[3], xend=mr$kappa[4], yend=mr$rew[4]), col='blue') +
+    geom_segment(aes(x=mr$kappa[4], y=mr$rew[4], xend=mr$kappa[5], yend=mr$rew[5]), col='blue') +
+    labs(title='Average Reward for each Kappa', x='Kappa', y='Reward') +
+    scale_x_log10()
+ggsave('figures/kappa_grid_search.png', width=7, height=5)
 
-# DEP actor
-df <- read.csv('dep_actor_results/init/metrics.csv')
-colnames(df)
 
+mr <- df %>% 
+    group_by(beta) %>%
+    summarise(rew=mean(avg_reward))
 ggplot(data=df) +
-    geom_point(aes(x=X, y=critic_loss))
+    geom_jitter(aes(x=beta, y=avg_reward), width=0.0002) +
+    geom_segment(aes(x=mr$beta[1], y=mr$rew[1], xend=mr$beta[2], yend=mr$rew[2]), col='blue') +
+    geom_segment(aes(x=mr$beta[2], y=mr$rew[2], xend=mr$beta[3], yend=mr$rew[3]), col='blue') +
+    geom_segment(aes(x=mr$beta[3], y=mr$rew[3], xend=mr$beta[4], yend=mr$rew[4]), col='blue') +
+    geom_segment(aes(x=mr$beta[4], y=mr$rew[4], xend=mr$beta[5], yend=mr$rew[5]), col='blue') +
+    labs(title='Average Reward for each Beta', x='Beta', y='Reward')
+ggsave('figures/beta_grid_search.png', width=7, height=5)
 
 
+mr <- df %>% 
+    group_by(sigma) %>%
+    summarise(rew=mean(avg_reward))
+ggplot(data=df) +
+    geom_jitter(aes(x=sigma, y=avg_reward), width=0.2) +
+    geom_segment(aes(x=mr$sigma[1], y=mr$rew[1], xend=mr$sigma[2], yend=mr$rew[2]), col='blue') +
+    geom_segment(aes(x=mr$sigma[2], y=mr$rew[2], xend=mr$sigma[3], yend=mr$rew[3]), col='blue') +
+    geom_segment(aes(x=mr$sigma[3], y=mr$rew[3], xend=mr$sigma[4], yend=mr$rew[4]), col='blue') +
+    geom_segment(aes(x=mr$sigma[4], y=mr$rew[4], xend=mr$sigma[5], yend=mr$rew[5]), col='blue') +
+    labs(title='Average Reward for each Sigma', x='Sigma', y='Reward')
+ggsave('figures/sigma_grid_search.png', width=7, height=5)
+
+
+mr <- df %>% 
+    group_by(delta_t) %>%
+    summarise(rew=mean(avg_reward))
+ggplot(data=df) +
+    geom_jitter(aes(x=delta_t, y=avg_reward), width=0.1) +
+    geom_segment(aes(x=mr$delta_t[1], y=mr$rew[1], xend=mr$delta_t[2], yend=mr$rew[2]), col='blue') +
+    geom_segment(aes(x=mr$delta_t[2], y=mr$rew[2], xend=mr$delta_t[3], yend=mr$rew[3]), col='blue') +
+    geom_segment(aes(x=mr$delta_t[3], y=mr$rew[3], xend=mr$delta_t[4], yend=mr$rew[4]), col='blue') +
+    geom_segment(aes(x=mr$delta_t[4], y=mr$rew[4], xend=mr$delta_t[5], yend=mr$rew[5]), col='blue') +
+    labs(title='Average Reward for each Delta t', x='Delta t', y='Reward')
+ggsave('figures/delta_t_grid_search.png', width=7, height=5)
 

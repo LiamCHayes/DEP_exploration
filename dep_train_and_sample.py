@@ -1,5 +1,5 @@
 """
-Deep reinforcement learning with DEP as part of the network input
+Deep reinforcement learning with DEP as part of the network input, sampling kappa bandit-style, and dep exploration
 """
 
 from dm_control import suite
