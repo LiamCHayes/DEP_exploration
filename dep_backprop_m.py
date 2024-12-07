@@ -46,9 +46,9 @@ dep_controller.M.retain_grad()
 # Training loop variables
 episode_reward = []
 episode_loss = []
-num_episodes = 100
-num_steps = 300
-progress_report_freq = 1
+num_episodes = 500
+num_steps = 500
+progress_report_freq = 10
 
 # Training loop
 for e in range(num_episodes):
@@ -113,27 +113,17 @@ for e in range(num_episodes):
     episode_reward.append(total_reward)
     episode_loss.append(total_loss.item())
 
-    see_live(frames)
-
-    """# Make a progress report video once in a while
+    # Make a progress report video once in a while
     if reporting:
         make_video(frames, f"dep_backprop_results/{args.name}/ep{e}_progress_report")
         torch.save(dep_controller.M, f'dep_backprop_results/{args.name}/ep{e}_model_matrix.pt')
 
-# Save episode rewards and losses
-data = np.array([episode_reward, episode_loss])
-cols=['reward', 'loss']
-df = pd.DataFrame(data).transpose()
-df.columns = cols
-df.to_csv(f'dep_backprop_results/{args.name}/metrics.csv')  
+    # Save episode rewards and losses
+    data = np.array([episode_reward, episode_loss])
+    cols=['reward', 'loss']
+    df = pd.DataFrame(data).transpose()
+    df.columns = cols
+    df.to_csv(f'dep_backprop_results/{args.name}/metrics.csv')  
 
-# Save DEP parameters
-data = [tau, kappa, beta, sigma, delta_t]
-cols = ['tau', 'kappa', 'beta', 'sigma', 'delat_t']
-df = pd.DataFrame(data).transpose()
-df.columns = cols
-df.to_csv(f'dep_backprop_results/{args.name}/dep_parameters.csv')
-
-# Save model matrix
-torch.save(dep_controller.M, f'dep_backprop_results/{args.name}/model_matrix.pt')
-"""
+    # Save model matrix
+    torch.save(dep_controller.M, f'dep_backprop_results/{args.name}/model_matrix.pt')

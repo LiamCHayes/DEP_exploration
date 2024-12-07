@@ -43,7 +43,7 @@ actor_target.load_state_dict(state_dict = actor.state_dict(), dep_state_dict = a
 critic_target = SimpleCritic(action_size, observation_size)
 critic_target.load_state_dict(critic.state_dict())
 
-lr = 0.01
+lr = 1e-3
 actor_adam = torch.optim.Adam(actor.parameters(), lr=lr)
 critic_adam = torch.optim.Adam(critic.parameters(), lr=lr)
 
@@ -79,9 +79,9 @@ episode_actor_loss = []
 episode_critic_loss = []
 num_episodes = int(args.episodes)
 num_steps = 500
-progress_report_freq = 100
-memory = ReplayBuffer(maxlen=1000)
-batch_size = 32
+progress_report_freq = 1000
+memory = ReplayBuffer(maxlen=1000000)
+batch_size = 512
 gamma = 0.95
 update_freq = 100
 
@@ -160,7 +160,7 @@ for e in range(num_episodes):
         critic_loss.backward()
         critic_adam.step()
 
-        actor_loss = critic(states, actor.forward_no_step(states, dep_outputs)).mean()
+        actor_loss = -critic(states, actor.forward_no_step(states, dep_outputs)).mean()
 
         actor_adam.zero_grad()
         actor_loss.backward()
@@ -188,12 +188,12 @@ for e in range(num_episodes):
         make_video(frames, f"dep_layer_results/{args.name}/ep{e}_progress_report")
         torch.save(actor.state_dict(), f'dep_layer_results/{args.name}/ep{e}_model_matrix.pth')
 
-# Save metrics 
-data = np.array([total_reward, episode_actor_loss, episode_critic_loss])
-cols=['reward', 'actor_loss', 'critic_loss']
-df = pd.DataFrame(data).transpose()
-df.columns = cols
-df.to_csv(f'dep_layer_results/{args.name}/metrics.csv')  
+    # Save metrics 
+    data = np.array([total_reward, episode_actor_loss, episode_critic_loss])
+    cols=['reward', 'actor_loss', 'critic_loss']
+    df = pd.DataFrame(data).transpose()
+    df.columns = cols
+    df.to_csv(f'dep_layer_results/{args.name}/metrics.csv')  
 
 # Save model
 make_video(frames, f"dep_layer_results/{args.name}/ep{e}_progress_report")

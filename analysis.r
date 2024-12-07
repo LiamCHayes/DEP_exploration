@@ -1,6 +1,6 @@
 library(dplyr)
 library(ggplot2)
-
+library(zoo)
 
 ## Grid search analysis
 df <- read.csv('metrics/grid_rewards.csv')
@@ -72,3 +72,57 @@ ggplot(data=df) +
     labs(title='Average Reward for each Delta t', x='Delta t', y='Reward')
 ggsave('figures/delta_t_grid_search.png', width=7, height=5)
 
+## DEP RL analysis
+df <- read.csv('dep_RL_results/noise_0.05/metrics.csv')
+colnames(df)
+
+ggplot(data=df) +
+    geom_point(aes(x=X, y=reward)) + 
+    labs(title='Reward During Training', x="Episodes", y='Reward')
+ggsave('figures/DEPRL_small_reward.png', width=7, height=5)
+
+
+## Updating model matrix results
+df <- read.csv('dep_backprop_results/forthepaper_longer/metrics.csv')
+colnames(df)
+
+ggplot(data=df) +
+    geom_point(aes(x=X, y=loss)) +
+    labs(title="Backpropegation on the Model Matrix - Loss", x="Episode", y="Loss")
+ggsave('figures/backprop_m_loss.png', width=7, height=5)
+
+ggplot(data=df) +
+    geom_point(aes(x=X, y=reward)) +
+    labs(title="Backpropegation on the Model Matrix - Reward", x="Episode", y="Reward")
+ggsave('figures/backprop_m_reward.png', width=7, height=5)
+    
+## Deep updating model matrix
+df <- read.csv('dep_deep_backprop_results/forthepaper_longer/metrics.csv')
+colnames(df)
+
+ggplot(data=df) +
+    geom_point(aes(x=X, y=loss)) +
+    labs(title="Learning a Deep Model Matrix - Loss", x="Episode", y="Loss")
+ggsave('figures/deep_backprop_m_loss_500.png', width=7, height=5)
+
+ggplot(data=df) +
+    geom_point(aes(x=X, y=reward)) +
+    labs(title="Learning a Deep Model Matrix - Reward", x="Episode", y="Reward")
+ggsave('figures/deep_backprop_m_reward_500.png', width=7, height=5)
+
+# Moving averages
+k <- 15
+df <- df %>% 
+    mutate(loss_ma = rollmean(loss, k=k, fill=T, align='right')) %>%
+    mutate(reward_ma = rollmean(reward, k=k, fill=T, align='right')) %>%
+    filter(reward_ma != 1)
+
+ggplot(data=df) +
+    geom_line(aes(x=X, y=loss_ma)) +
+    labs(title="Deep Model Matrix - Loss Moving Average", x="Episode", y="Loss")
+ggsave('figures/deep_m_loss_ma.png', width=7, height=5)
+
+ggplot(data=df) +
+    geom_line(aes(x=X, y=reward_ma)) +
+    labs(title="Deep Model Matrix - Reward Moving Average", x="Episode", y="Reward")
+ggsave('figures/deep_m_reward_ma.png', width=7, height=5)
