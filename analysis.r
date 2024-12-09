@@ -95,7 +95,16 @@ ggplot(data=df) +
     geom_point(aes(x=X, y=reward)) +
     labs(title="Backpropegation on the Model Matrix - Reward", x="Episode", y="Reward")
 ggsave('figures/backprop_m_reward.png', width=7, height=5)
-    
+
+df_lin_inc <- df %>% filter(loss > 340) %>% filter(reward < 20)
+df_lin_dec <- df %>% filter(loss < 340) %>% filter(loss > 250)
+df_exp_dec <- df %>% filter(loss < 250)
+
+ggplot(data=df_lin_inc) +
+    geom_point(aes(x=X, y=reward)) +
+    labs(title="Backpropegation on the Model Matrix - Loss", x="Episode", y="Loss")
+ggsave('figures/backprop_m_loss.png', width=7, height=5)
+
 ## Deep updating model matrix
 df <- read.csv('dep_deep_backprop_results/forthepaper_longer/metrics.csv')
 colnames(df)
@@ -111,18 +120,24 @@ ggplot(data=df) +
 ggsave('figures/deep_backprop_m_reward_500.png', width=7, height=5)
 
 # Moving averages
-k <- 15
-df <- df %>% 
+k <- 6
+df_avgs <- df %>% 
     mutate(loss_ma = rollmean(loss, k=k, fill=T, align='right')) %>%
     mutate(reward_ma = rollmean(reward, k=k, fill=T, align='right')) %>%
-    filter(reward_ma != 1)
+    filter(reward_ma != 1) %>%
+    mutate(loss_ma = rollmean(loss_ma, k=k, fill=T, align='right')) %>%
+    mutate(reward_ma = rollmean(reward_ma, k=k, fill=T, align='right')) %>%
+    filter(reward_ma != 1) %>%
+    mutate(loss_ma = rollmean(loss_ma, k=k, fill=T, align='right')) %>%
+    mutate(reward_ma = rollmean(reward_ma, k=k, fill=T, align='right')) %>%
+    filter(reward_ma != 1) 
 
-ggplot(data=df) +
+ggplot(data=df_avgs) +
     geom_line(aes(x=X, y=loss_ma)) +
     labs(title="Deep Model Matrix - Loss Moving Average", x="Episode", y="Loss")
 ggsave('figures/deep_m_loss_ma.png', width=7, height=5)
 
-ggplot(data=df) +
+ggplot(data=df_avgs) +
     geom_line(aes(x=X, y=reward_ma)) +
     labs(title="Deep Model Matrix - Reward Moving Average", x="Episode", y="Reward")
 ggsave('figures/deep_m_reward_ma.png', width=7, height=5)
