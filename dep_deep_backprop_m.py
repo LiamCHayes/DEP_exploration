@@ -39,7 +39,7 @@ observation_size = env.observation_spec()['position'].shape[0]
 dep_controller = DEPDeepModel(tau, kappa, beta, sigma, delta_t, device, action_size, observation_size)
 
 # Optimizer things
-lr = 0.01
+lr = 0.001
 optimizer = torch.optim.Adam(dep_controller.M.parameters(), lr=lr)
 
 # Training loop variables
@@ -47,7 +47,7 @@ episode_reward = []
 episode_loss = []
 num_episodes = int(args.episodes)
 num_steps = 500
-progress_report_freq = 1
+progress_report_freq = 10
 
 # Training loop
 for e in range(num_episodes):
@@ -113,27 +113,17 @@ for e in range(num_episodes):
     episode_reward.append(total_reward)
     episode_loss.append(total_loss.item())
 
-    see_live(frames)
-
-    """# Make a progress report video once in a while
+    # Make a progress report video once in a while
     if reporting:
         make_video(frames, f"dep_deep_backprop_results/{args.name}/ep{e}_progress_report")
         torch.save(dep_controller.M, f'dep_deep_backprop_results/{args.name}/ep{e}_model_matrix.pt')
-    """
-
-# Save episode rewards and losses
-data = np.array([episode_reward, episode_loss])
-cols=['reward', 'loss']
-df = pd.DataFrame(data).transpose()
-df.columns = cols
-df.to_csv(f'dep_deep_backprop_results/{args.name}/metrics.csv')  
-
-# Save DEP parameters
-data = [tau, kappa, beta, sigma, delta_t]
-cols = ['tau', 'kappa', 'beta', 'sigma', 'delat_t']
-df = pd.DataFrame(data).transpose()
-df.columns = cols
-df.to_csv(f'dep_deep_backprop_results/{args.name}/dep_parameters.csv')
+    
+    # Save episode rewards and losses
+    data = np.array([episode_reward, episode_loss])
+    cols=['reward', 'loss']
+    df = pd.DataFrame(data).transpose()
+    df.columns = cols
+    df.to_csv(f'dep_deep_backprop_results/{args.name}/metrics.csv')  
 
 # Save model matrix
 torch.save(dep_controller.M, f'dep_deep_backprop_results/{args.name}/dep_deep_model_matrix_trained.pt')
