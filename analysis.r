@@ -141,3 +141,17 @@ ggplot(data=df_avgs) +
     geom_line(aes(x=X, y=reward_ma)) +
     labs(title="Deep Model Matrix - Reward Moving Average", x="Episode", y="Reward")
 ggsave('figures/deep_m_reward_ma.png', width=7, height=5)
+
+# Others
+df <- read.csv('dep_actor_results/longer/metrics.csv')
+colnames(df)
+
+ggplot(data=df) +
+    geom_point(aes(x=X, y=reward)) +
+    labs(title="DEP Actor Reward", x="Episode", y="Reward")
+ggsave('figures/dep_actor_reward.png', width=7, height=5)
+
+ggplot(data=df) +
+    geom_point(aes(x=X, y=dep_proportion)) +
+    labs(title="Proportion of DEP Actions Per Episode", x="Episode", y="DEP Proportion")
+ggsave('figures/dep_actor_proportion.png', width=7, height=5)
